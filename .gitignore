@@ -1,0 +1,6 @@
+# Local Luau toolchain fetched by the build/test tooling; not part of the library.
+.tools/
+
+# Scratch output
+*.log
+/artifacts/

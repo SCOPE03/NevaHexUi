@@ -1,0 +1,424 @@
+{
+  "version": "1.0.0",
+  "generatedModules": 42,
+  "modules": [
+    {
+      "id": "Animation/Presets",
+      "path": "src/Animation/Presets.luau",
+      "bytes": 3692,
+      "requires": []
+    },
+    {
+      "id": "Compatibility/Capabilities",
+      "path": "src/Compatibility/Capabilities.luau",
+      "bytes": 3266,
+      "requires": []
+    },
+    {
+      "id": "Compatibility/MockHost",
+      "path": "src/Compatibility/MockHost.luau",
+      "bytes": 13790,
+      "requires": []
+    },
+    {
+      "id": "Compatibility/RobloxHost",
+      "path": "src/Compatibility/RobloxHost.luau",
+      "bytes": 10551,
+      "requires": []
+    },
+    {
+      "id": "Compatibility/Host",
+      "path": "src/Compatibility/Host.luau",
+      "bytes": 1778,
+      "requires": [
+        "Compatibility/Capabilities",
+        "Compatibility/MockHost",
+        "Compatibility/RobloxHost"
+      ]
+    },
+    {
+      "id": "Core/Dependency",
+      "path": "src/Core/Dependency.luau",
+      "bytes": 4393,
+      "requires": []
+    },
+    {
+      "id": "Core/Signal",
+      "path": "src/Core/Signal.luau",
+      "bytes": 1832,
+      "requires": []
+    },
+    {
+      "id": "Core/Util",
+      "path": "src/Core/Util.luau",
+      "bytes": 5538,
+      "requires": []
+    },
+    {
+      "id": "Utilities/Color",
+      "path": "src/Utilities/Color.luau",
+      "bytes": 5419,
+      "requires": []
+    },
+    {
+      "id": "Styles/Schema",
+      "path": "src/Styles/Schema.luau",
+      "bytes": 10975,
+      "requires": [
+        "Core/Util",
+        "Utilities/Color"
+      ]
+    },
+    {
+      "id": "Styles/Registry",
+      "path": "src/Styles/Registry.luau",
+      "bytes": 9675,
+      "requires": [
+        "Core/Util",
+        "Styles/Schema"
+      ]
+    },
+    {
+      "id": "Styles/Resolver",
+      "path": "src/Styles/Resolver.luau",
+      "bytes": 6680,
+      "requires": [
+        "Core/Util",
+        "Styles/Registry",
+        "Styles/Schema"
+      ]
+    },
+    {
+      "id": "Core/Component",
+      "path": "src/Core/Component.luau",
+      "bytes": 19851,
+      "requires": [
+        "Core/Dependency",
+        "Core/Signal",
+        "Core/Util",
+        "Styles/Registry",
+        "Styles/Resolver",
+        "Styles/Schema"
+      ]
+    },
+    {
+      "id": "Components/Controls",
+      "path": "src/Components/Controls.luau",
+      "bytes": 18247,
+      "requires": [
+        "Core/Component",
+        "Core/Util",
+        "Utilities/Color"
+      ]
+    },
+    {
+      "id": "Components/Displays",
+      "path": "src/Components/Displays.luau",
+      "bytes": 5960,
+      "requires": [
+        "Core/Component",
+        "Core/Util"
+      ]
+    },
+    {
+      "id": "Components/Transient",
+      "path": "src/Components/Transient.luau",
+      "bytes": 2542,
+      "requires": [
+        "Core/Component",
+        "Core/Signal"
+      ]
+    },
+    {
+      "id": "Components/Index",
+      "path": "src/Components/Index.luau",
+      "bytes": 2417,
+      "requires": [
+        "Components/Controls",
+        "Components/Displays",
+        "Components/Transient"
+      ]
+    },
+    {
+      "id": "Configuration/Json",
+      "path": "src/Configuration/Json.luau",
+      "bytes": 7208,
+      "requires": [
+        "Core/Util"
+      ]
+    },
+    {
+      "id": "Themes/Defs",
+      "path": "src/Themes/Defs.luau",
+      "bytes": 10129,
+      "requires": []
+    },
+    {
+      "id": "Themes/Tokens",
+      "path": "src/Themes/Tokens.luau",
+      "bytes": 2371,
+      "requires": []
+    },
+    {
+      "id": "Themes/Registry",
+      "path": "src/Themes/Registry.luau",
+      "bytes": 7460,
+      "requires": [
+        "Core/Util",
+        "Themes/Defs",
+        "Themes/Tokens",
+        "Utilities/Color"
+      ]
+    },
+    {
+      "id": "Configuration/Config",
+      "path": "src/Configuration/Config.luau",
+      "bytes": 8558,
+      "requires": [
+        "Configuration/Json",
+        "Core/Util",
+        "Styles/Registry",
+        "Themes/Registry"
+      ]
+    },
+    {
+      "id": "Input/Keybinder",
+      "path": "src/Input/Keybinder.luau",
+      "bytes": 6136,
+      "requires": [
+        "Core/Util"
+      ]
+    },
+    {
+      "id": "Core/Container",
+      "path": "src/Core/Container.luau",
+      "bytes": 7792,
+      "requires": [
+        "Core/Component",
+        "Core/Dependency",
+        "Core/Dependency",
+        "Core/Util",
+        "Input/Keybinder"
+      ]
+    },
+    {
+      "id": "Core/Logger",
+      "path": "src/Core/Logger.luau",
+      "bytes": 1907,
+      "requires": []
+    },
+    {
+      "id": "State/Store",
+      "path": "src/State/Store.luau",
+      "bytes": 4776,
+      "requires": [
+        "Core/Util"
+      ]
+    },
+    {
+      "id": "Core/Context",
+      "path": "src/Core/Context.luau",
+      "bytes": 7073,
+      "requires": [
+        "Core/Component",
+        "Core/Dependency",
+        "Core/Logger",
+        "Core/Util",
+        "State/Store",
+        "Styles/Registry",
+        "Themes/Registry"
+      ]
+    },
+    {
+      "id": "Core/Layouts",
+      "path": "src/Core/Layouts.luau",
+      "bytes": 3532,
+      "requires": []
+    },
+    {
+      "id": "Styles/Helpers",
+      "path": "src/Styles/Helpers.luau",
+      "bytes": 4950,
+      "requires": [
+        "Utilities/Color"
+      ]
+    },
+    {
+      "id": "Styles/Surface",
+      "path": "src/Styles/Surface.luau",
+      "bytes": 7891,
+      "requires": [
+        "Animation/Presets",
+        "Styles/Helpers",
+        "Utilities/Color"
+      ]
+    },
+    {
+      "id": "Studio",
+      "path": "src/Studio.luau",
+      "bytes": 27115,
+      "requires": [
+        "Animation/Presets",
+        "Core/Container",
+        "Styles/Helpers",
+        "Styles/Registry",
+        "Styles/Registry",
+        "Styles/Schema",
+        "Styles/Surface"
+      ]
+    },
+    {
+      "id": "Core/Window",
+      "path": "src/Core/Window.luau",
+      "bytes": 26091,
+      "requires": [
+        "Configuration/Config",
+        "Core/Container",
+        "Core/Layouts",
+        "Core/Signal",
+        "Core/Util",
+        "Studio",
+        "Styles/Helpers",
+        "Styles/Surface"
+      ]
+    },
+    {
+      "id": "Styles/Defs/Buttons",
+      "path": "src/Styles/Defs/Buttons.luau",
+      "bytes": 13452,
+      "requires": [
+        "Styles/Helpers",
+        "Styles/Registry",
+        "Styles/Surface"
+      ]
+    },
+    {
+      "id": "Styles/Defs/DataViews",
+      "path": "src/Styles/Defs/DataViews.luau",
+      "bytes": 15675,
+      "requires": [
+        "Styles/Helpers",
+        "Styles/Registry",
+        "Styles/Surface"
+      ]
+    },
+    {
+      "id": "Styles/Defs/Display",
+      "path": "src/Styles/Defs/Display.luau",
+      "bytes": 21557,
+      "requires": [
+        "Styles/Helpers",
+        "Styles/Registry",
+        "Styles/Surface"
+      ]
+    },
+    {
+      "id": "Styles/Defs/Feedback",
+      "path": "src/Styles/Defs/Feedback.luau",
+      "bytes": 12037,
+      "requires": [
+        "Styles/Helpers",
+        "Styles/Registry",
+        "Styles/Surface"
+      ]
+    },
+    {
+      "id": "Styles/Defs/Pickers",
+      "path": "src/Styles/Defs/Pickers.luau",
+      "bytes": 15651,
+      "requires": [
+        "Styles/Helpers",
+        "Styles/Registry",
+        "Styles/Surface",
+        "Utilities/Color"
+      ]
+    },
+    {
+      "id": "Styles/Defs/Sliders",
+      "path": "src/Styles/Defs/Sliders.luau",
+      "bytes": 18218,
+      "requires": [
+        "Styles/Helpers",
+        "Styles/Registry",
+        "Styles/Surface"
+      ]
+    },
+    {
+      "id": "Styles/Defs/TextInputs",
+      "path": "src/Styles/Defs/TextInputs.luau",
+      "bytes": 18840,
+      "requires": [
+        "Styles/Helpers",
+        "Styles/Registry",
+        "Styles/Surface"
+      ]
+    },
+    {
+      "id": "Styles/Defs/Toggles",
+      "path": "src/Styles/Defs/Toggles.luau",
+      "bytes": 16967,
+      "requires": [
+        "Styles/Helpers",
+        "Styles/Registry",
+        "Styles/Surface"
+      ]
+    },
+    {
+      "id": "Runtime",
+      "path": "src/Runtime.luau",
+      "bytes": 13320,
+      "requires": [
+        "Animation/Presets",
+        "Compatibility/Capabilities",
+        "Compatibility/Host",
+        "Components/Index",
+        "Configuration/Json",
+        "Core/Context",
+        "Core/Layouts",
+        "Core/Logger",
+        "Core/Util",
+        "Core/Window",
+        "Input/Keybinder",
+        "State/Store",
+        "Styles/Defs/Buttons",
+        "Styles/Defs/DataViews",
+        "Styles/Defs/Display",
+        "Styles/Defs/Feedback",
+        "Styles/Defs/Pickers",
+        "Styles/Defs/Sliders",
+        "Styles/Defs/TextInputs",
+        "Styles/Defs/Toggles",
+        "Styles/Registry",
+        "Styles/Resolver",
+        "Styles/Schema",
+        "Themes/Defs",
+        "Themes/Registry"
+      ]
+    },
+    {
+      "id": "Init",
+      "path": "src/Init.luau",
+      "bytes": 837,
+      "requires": [
+        "Runtime"
+      ]
+    }
+  ],
+  "outputs": [
+    {
+      "file": "build/NEVAHEXUI.luau",
+      "bytes": 407656,
+      "hash": "8939b4d27b0d4082"
+    },
+    {
+      "file": "build/NEVAHEXUI.min.lua",
+      "bytes": 362396,
+      "hash": "38e091acb14683a5"
+    },
+    {
+      "file": "build/nevahexui-tests.luau",
+      "bytes": 425937,
+      "hash": "54ca8439988b8151"
+    }
+  ]
+}
