@@ -28,10 +28,12 @@ function Layouts.register(definition)
 		TouchFriendly = definition.TouchFriendly == true,
 		Density = definition.Density or 1,
 		Chrome = definition.Chrome or "Standard",
+		-- Modest fixed default: adding a large offset to a viewport fraction made
+		-- the window wider and taller than the screen it was opening on.
 		Sizing = definition.Sizing or {
-			Size = { 0.62, 480, 0.68, 360 },
-			MinSize = { 420, 300 },
-			MaxSize = { 1100, 780 },
+			Size = { 0, 620, 0, 420 },
+			MinSize = { 360, 260 },
+			MaxSize = { 1080, 760 },
 		},
 		Build = definition.Build,
 	}
@@ -116,8 +118,8 @@ Layouts.register({
 	Density = 1.15,
 	Sizing = {
 		Size = { 0.94, 0, 0.9, 0 },
-		MinSize = { 300, 260 },
-		MaxSize = { 720, 900 },
+		MinSize = { 280, 240 },
+		MaxSize = { 720, 760 },
 	},
 })
 

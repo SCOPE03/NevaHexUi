@@ -109,6 +109,31 @@ print("PICKER=" .. tostring(toggled ~= nil and toggled == true))
 local copyable = section:CreateCopyableInput({ Name = "Sweep copy", Flag = "SweepCopy", Default = "value" })
 local copySurface = copyable.View and copyable.View.Copy
 print("COPYCLASS=" .. tostring(copySurface and copySurface.ClassName))
+
+-- 6. Windows must fit the screen in every layout, including a phone viewport,
+--    and must re-fit themselves when the viewport changes.
+local originalViewport = host.viewportSize()
+local fits = true
+for _, layout in ipairs(NEVAHEXUI:ListLayouts()) do
+	host.setViewport(375, 812)
+	local small = NEVAHEXUI:CreateWindow({ Name = "fit " .. layout.Id, Layout = layout.Id })
+	local phoneWidth = small.PixelSize and small.PixelSize.Width or -1
+	local phoneHeight = small.PixelSize and small.PixelSize.Height or -1
+	local phoneOk = phoneWidth > 0 and phoneWidth <= 375 and phoneHeight > 0 and phoneHeight <= 812
+	-- The viewport change alone must resize the window: no rebuild, no manual call.
+	host.setViewport(1920, 1080)
+	local deskWidth = small.PixelSize and small.PixelSize.Width or -1
+	local deskHeight = small.PixelSize and small.PixelSize.Height or -1
+	local deskOk = deskWidth >= 360 and deskWidth <= 1920 and deskHeight >= 260 and deskHeight <= 1080
+	if not (phoneOk and deskOk) then
+		fits = false
+	end
+	print(("FIT %-13s phone %dx%d %-5s desktop %dx%d %s"):format(
+		layout.Id, phoneWidth, phoneHeight, tostring(phoneOk), deskWidth, deskHeight, tostring(deskOk)))
+	small:Destroy()
+end
+host.setViewport(originalViewport.X, originalViewport.Y)
+print("FITS=" .. tostring(fits))
 """
 
 # The probe is Lua, so its table braces cannot go through str.format.
@@ -144,7 +169,7 @@ def main(argv):
         value = count(name)
         if value != 0:
             problems.append("%s=%d" % (name, value))
-    for name in ("TITLEBAR=true/true", "PICKER=true", "COPYCLASS=TextButton", "ROOTCHAIN=true"):
+    for name in ("TITLEBAR=true/true", "PICKER=true", "COPYCLASS=TextButton", "ROOTCHAIN=true", "FITS=true"):
         if name not in output:
             problems.append("expected " + name)
 

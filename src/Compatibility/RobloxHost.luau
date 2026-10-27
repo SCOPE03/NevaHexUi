@@ -473,6 +473,24 @@ end
 		return { X = 1920, Y = 1080 }
 	end
 
+	host.onViewportChanged = function(callback)
+		local camera = safeCall(function()
+			return workspace.CurrentCamera
+		end)
+		if not camera then
+			return { Disconnect = function() end }
+		end
+		local signal = safeCall(function()
+			return camera:GetPropertyChangedSignal("ViewportSize")
+		end)
+		if signal == nil or type(signal.Connect) ~= "function" then
+			return { Disconnect = function() end }
+		end
+		return safeCall(function()
+			return signal:Connect(callback)
+		end) or { Disconnect = function() end }
+	end
+
 	host.fs = {}
 	host.fs.isfile = function(path)
 		local fn = globalFunction("isfile")

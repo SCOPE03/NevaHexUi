@@ -597,6 +597,35 @@ end
 		return host.Viewport
 	end
 
+	host.ViewportListeners = {}
+
+	host.onViewportChanged = function(callback)
+		table.insert(host.ViewportListeners, callback)
+		local connection = {}
+		function connection:Disconnect()
+			for index, candidate in ipairs(host.ViewportListeners) do
+				if candidate == callback then
+					table.remove(host.ViewportListeners, index)
+					break
+				end
+			end
+		end
+		return connection
+	end
+
+	-- Test affordance: change the viewport the way a rotated device would.
+	host.setViewport = function(x, y)
+		host.Viewport = host.vector2(x, y)
+		local snapshot = {}
+		for _, callback in ipairs(host.ViewportListeners) do
+			table.insert(snapshot, callback)
+		end
+		for _, callback in ipairs(snapshot) do
+			callback()
+		end
+		return host.Viewport
+	end
+
 	host.fs = {}
 	host.fs.isfile = function(path)
 		return host.Files[path] ~= nil

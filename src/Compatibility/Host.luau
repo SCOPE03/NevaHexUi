@@ -22,6 +22,7 @@ Host.Contract = {
 	"heartbeat",
 	"inputBind",
 	"newRoot",
+	"onViewportChanged",
 	"children",
 	"findAll",
 	"findFirst",

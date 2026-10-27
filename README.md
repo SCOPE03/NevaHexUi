@@ -51,6 +51,34 @@ Runnable examples live in [`examples/`](examples) — start with
 
 ---
 
+## Sizing and small screens
+
+Window sizes are resolved in pixels and always clamped into the viewport with a
+24px margin, so a window can never open larger than the screen it is shown on. The
+default is 620x420; the Compact/mobile layout uses 94% x 90% of the viewport.
+
+```lua
+local Window = NEVAHEXUI:CreateWindow({
+	Name = "NEVAHEXUI",
+	Size = "medium",              -- compact 440x320 | small 520x380 | medium 620x420 | large 820x540
+	-- Size = 700,                -- a width in pixels; height follows at 0.68 of it
+	-- Size = { 700, 460 },       -- exact { width, height } in pixels
+	-- Size = { 0.9, 0, 0.8, 0 }, -- raw UDim2 form: { xScale, xOffset, yScale, yOffset }
+	Scale = 1,                    -- multiplies the whole interface, text included
+})
+```
+
+- `Window:SetSize(700, 460)` resizes to pixels at runtime; the four-argument UDim2
+  form (`SetSize(0.5, 0, 0.5, 0)`) still works.
+- `Window:SetScale(0.85)` shrinks every element at once — the lever for a very
+  small screen where even a fitted window is too dense.
+- `Window:GetSize()` returns the live `{ Width, Height }` in pixels.
+- Rotating the device or resizing the game window re-fits every open window
+  automatically. Every layout is covered by the size-fit check in
+  [`tools/verify-styles.py`](tools/verify-styles.py).
+
+---
+
 ## Two styles of the same component, in one window
 
 ```lua

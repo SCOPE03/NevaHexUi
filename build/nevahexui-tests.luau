@@ -1158,6 +1158,35 @@ end
 		return host.Viewport
 	end
 
+	host.ViewportListeners = {}
+
+	host.onViewportChanged = function(callback)
+		table.insert(host.ViewportListeners, callback)
+		local connection = {}
+		function connection:Disconnect()
+			for index, candidate in ipairs(host.ViewportListeners) do
+				if candidate == callback then
+					table.remove(host.ViewportListeners, index)
+					break
+				end
+			end
+		end
+		return connection
+	end
+
+	-- Test affordance: change the viewport the way a rotated device would.
+	host.setViewport = function(x, y)
+		host.Viewport = host.vector2(x, y)
+		local snapshot = {}
+		for _, callback in ipairs(host.ViewportListeners) do
+			table.insert(snapshot, callback)
+		end
+		for _, callback in ipairs(snapshot) do
+			callback()
+		end
+		return host.Viewport
+	end
+
 	host.fs = {}
 	host.fs.isfile = function(path)
 		return host.Files[path] ~= nil
@@ -1677,6 +1706,24 @@ end
 		return { X = 1920, Y = 1080 }
 	end
 
+	host.onViewportChanged = function(callback)
+		local camera = safeCall(function()
+			return workspace.CurrentCamera
+		end)
+		if not camera then
+			return { Disconnect = function() end }
+		end
+		local signal = safeCall(function()
+			return camera:GetPropertyChangedSignal("ViewportSize")
+		end)
+		if signal == nil or type(signal.Connect) ~= "function" then
+			return { Disconnect = function() end }
+		end
+		return safeCall(function()
+			return signal:Connect(callback)
+		end) or { Disconnect = function() end }
+	end
+
 	host.fs = {}
 	host.fs.isfile = function(path)
 		local fn = globalFunction("isfile")
@@ -1765,6 +1812,7 @@ Host.Contract = {
 	"heartbeat",
 	"inputBind",
 	"newRoot",
+	"onViewportChanged",
 	"children",
 	"findAll",
 	"findFirst",
@@ -7794,10 +7842,12 @@ function Layouts.register(definition)
 		TouchFriendly = definition.TouchFriendly == true,
 		Density = definition.Density or 1,
 		Chrome = definition.Chrome or "Standard",
+		-- Modest fixed default: adding a large offset to a viewport fraction made
+		-- the window wider and taller than the screen it was opening on.
 		Sizing = definition.Sizing or {
-			Size = { 0.62, 480, 0.68, 360 },
-			MinSize = { 420, 300 },
-			MaxSize = { 1100, 780 },
+			Size = { 0, 620, 0, 420 },
+			MinSize = { 360, 260 },
+			MaxSize = { 1080, 760 },
 		},
 		Build = definition.Build,
 	}
@@ -7882,8 +7932,8 @@ Layouts.register({
 	Density = 1.15,
 	Sizing = {
 		Size = { 0.94, 0, 0.9, 0 },
-		MinSize = { 300, 260 },
-		MaxSize = { 720, 900 },
+		MinSize = { 280, 240 },
+		MaxSize = { 720, 760 },
 	},
 })
 
@@ -9332,6 +9382,16 @@ function Window.new(context, options)
 	self.TabChanged = Signal.new("TabChanged")
 	self.LayoutChanged = Signal.new("LayoutChanged")
 
+	if self.Host.onViewportChanged then
+		-- Rotating the device or resizing the game window re-fits every open
+		-- window, so the interface can never end up off screen.
+		table.insert(self.ConnectionList, self.Host.onViewportChanged(function()
+			if not self.Destroyed then
+				self:ApplyRootSize()
+			end
+		end))
+	end
+
 	self.LayoutId = options.Layout or "Sidebar"
 	if not Layouts.has(self.LayoutId) then
 		context:Diagnostic("Warn", ("unknown layout %q, falling back to Sidebar"):format(tostring(self.LayoutId)))
@@ -9368,16 +9428,103 @@ end
 
 -- Chrome ---------------------------------------------------------------------
 
-function Window:ComputeRootSize()
+-- Sizing ---------------------------------------------------------------------
+
+-- Named presets accepted by Options.Size / Window:SetSize alongside a plain
+-- width or a { width, height } pair.
+local SIZE_PRESETS = {
+	compact = { 440, 320 },
+	small = { 520, 380 },
+	medium = { 620, 420 },
+	large = { 820, 540 },
+}
+
+-- Breathing room kept around the window so its chrome stays reachable.
+local SIZE_MARGIN = 24
+
+-- Resolves the window's size in pixels and clamps it into the viewport. An
+-- explicit Options.Size wins over the layout's Sizing, and nothing is allowed to
+-- end up larger than the screen it is shown on.
+function Window:ResolvePixelSize()
 	local sizing = self.Layout.Sizing or {}
-	local size = sizing.Size or { 0.62, 480, 0.68, 360 }
-	return (size[1] or 0), (size[2] or 480), (size[3] or 0), (size[4] or 360)
+	local viewport = viewportOf(self.Host)
+	if viewport.X <= 0 or viewport.Y <= 0 then
+		viewport = { X = 1280, Y = 720 }
+	end
+
+	local requested = self.Options.Size
+	local width, height
+	if type(requested) == "string" then
+		local preset = SIZE_PRESETS[string.lower(requested)]
+		if preset then
+			width, height = preset[1], preset[2]
+		end
+	elseif type(requested) == "number" then
+		width, height = requested, requested * 0.68
+	elseif type(requested) == "table" then
+		if requested[3] == nil and requested[4] == nil then
+			-- { width, height } in pixels
+			if type(requested[1]) == "number" and type(requested[2]) == "number" then
+				width, height = requested[1], requested[2]
+			end
+		else
+			width = (requested[1] or 0) * viewport.X + (requested[2] or 0)
+			height = (requested[3] or 0) * viewport.Y + (requested[4] or 0)
+		end
+	end
+	if not width or not height then
+		local size = sizing.Size or { 0, 620, 0, 420 }
+		width = (size[1] or 0) * viewport.X + (size[2] or 0)
+		height = (size[3] or 0) * viewport.Y + (size[4] or 0)
+	end
+	if width <= 0 or height <= 0 then
+		width, height = 620, 420
+	end
+
+	local minSize = sizing.MinSize or { 360, 260 }
+	local maxSize = sizing.MaxSize or { 1080, 760 }
+	local availableWidth = math.max(200, viewport.X - SIZE_MARGIN * 2)
+	local availableHeight = math.max(140, viewport.Y - SIZE_MARGIN * 2)
+	width = math.min(math.max(width, math.min(minSize[1] or 0, availableWidth)), math.min(maxSize[1] or width, availableWidth))
+	height = math.min(math.max(height, math.min(minSize[2] or 0, availableHeight)), math.min(maxSize[2] or height, availableHeight))
+	return math.floor(width), math.floor(height)
+end
+
+-- Applies the resolved size to the live window. Rebuilds nothing, so it is safe
+-- to run on every viewport change.
+function Window:ApplyRootSize()
+	if not self.Root then
+		return nil
+	end
+	local host = self.Host
+	local width, height = self:ResolvePixelSize()
+	self.Root.Size = host.udim2(0, width, 0, height)
+	self.PixelSize = { Width = width, Height = height }
+
+	local scale = tonumber(self.Options.Scale) or self.AppliedScale or 1
+	if scale ~= 1 and not self.ScaleObject then
+		self.ScaleObject = host.new("UIScale", { Name = "NevaScale", Scale = scale }, self.Root)
+	elseif self.ScaleObject then
+		self.ScaleObject.Scale = scale
+	end
+	self.AppliedScale = scale
+	return self.PixelSize
+end
+
+-- Multiplies the whole interface, for a screen where even a fitted window is
+-- too dense. 1 is the default; 0.8 is a good starting point on a phone.
+function Window:SetScale(scale)
+	self.Options.Scale = tonumber(scale) or 1
+	return self:ApplyRootSize()
+end
+
+function Window:GetSize()
+	return self.PixelSize
 end
 
 function Window:BuildChrome()
 	local host = self.Host
 	local tokens = self.Context.Tokens
-	local widthScale, widthOffset, heightScale, heightOffset = self:ComputeRootSize()
 	local sizing = self.Layout.Sizing or {}
 
 	if self.Root then
@@ -9406,7 +9553,7 @@ local parent = self.Options.Parent or host.Root
 		Name = "NEVAHEXUI_" .. self.Name,
 		BackgroundColor3 = tokens.Background,
 		BorderSizePixel = 0,
-		Size = host.udim2(widthScale, widthOffset, heightScale, heightOffset),
+		Size = host.udim2(0, 0, 0, 0),
 		Position = host.udim2(0.5, 0, 0.5, 0),
 		AnchorPoint = host.vector2(0.5, 0.5),
 		ClipsDescendants = false,
@@ -9415,6 +9562,7 @@ local parent = self.Options.Parent or host.Root
 	if self.Options.Transparency ~= nil then
 		self.Root.BackgroundTransparency = self.Options.Transparency
 	end
+	self:ApplyRootSize()
 	Helpers.corner(host, self.Root, tokens.CornerRadius or 8)
 	Helpers.stroke(host, self.Root, tokens.Outline, 1, 0.25)
 
@@ -9809,12 +9957,8 @@ function Window:RefreshLayout()
 	if self.PageLayout.AbsoluteContentSize then
 		self.PageHost.CanvasSize = self.Host.udim2(0, 0, 0, self.PageLayout.AbsoluteContentSize.Y + 20)
 	end
-	if self.Layout.TouchFriendly then
-		local viewport = viewportOf(self.Host)
-		if viewport.X > 0 and viewport.X < 420 then
-			self.Root.Size = self.Host.udim2(0.98, 0, 0.94, 0)
-		end
-	end
+	-- Refit rather than only shrinking for phones: every layout stays on screen.
+	self:ApplyRootSize()
 end
 
 function Window:SetTheme(themeId, overrides)
@@ -10057,14 +10201,22 @@ end
 function Window:Minimize()
 	self.Minimized = not self.Minimized
 	self.Body.Visible = not self.Minimized
-	local widthScale, widthOffset = self.Root.Size.X.Scale, self.Root.Size.X.Offset
-	self.Root.Size = self.Minimized
-		and self.Host.udim2(widthScale, widthOffset, 0, self.ChromeHeight)
-		or self.Host.udim2(widthScale, widthOffset, 0.68, 360)
+	if self.Minimized then
+		self.RestoreSize = self.PixelSize or { Width = 620, Height = 420 }
+		self.Root.Size = self.Host.udim2(0, self.RestoreSize.Width, 0, self.ChromeHeight)
+	else
+		self:ApplyRootSize()
+	end
 	return self.Minimized
 end
 
 function Window:SetSize(widthScale, widthOffset, heightScale, heightOffset)
+	if heightScale == nil and heightOffset == nil
+		and type(widthScale) == "number" and type(widthOffset) == "number" then
+		-- Pixel form: Window:SetSize(620, 420), still clamped to the viewport.
+		self.Options.Size = { widthScale, widthOffset }
+		return self:ApplyRootSize()
+	end
 	self.Root.Size = self.Host.udim2(widthScale, widthOffset, heightScale, heightOffset)
 	return self.Root.Size
 end
