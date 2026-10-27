@@ -366,7 +366,7 @@
     {
       "id": "Runtime",
       "path": "src/Runtime.luau",
-      "bytes": 13320,
+      "bytes": 13344,
       "requires": [
         "Animation/Presets",
         "Compatibility/Capabilities",
@@ -407,18 +407,18 @@
   "outputs": [
     {
       "file": "build/NEVAHEXUI.luau",
-      "bytes": 407801,
-      "hash": "69dda97b1fa9e1cc"
+      "bytes": 407825,
+      "hash": "aac7dea1bf840a4c"
     },
     {
       "file": "build/NEVAHEXUI.min.lua",
-      "bytes": 362314,
-      "hash": "3df95ecab4c99a80"
+      "bytes": 362188,
+      "hash": "be47d467c275e44b"
     },
     {
       "file": "build/nevahexui-tests.luau",
-      "bytes": 426082,
-      "hash": "35c4c7cbb076c698"
+      "bytes": 426106,
+      "hash": "6b208aa5b41b4c02"
     }
   ]
 }

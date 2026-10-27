@@ -13633,14 +13633,9 @@ end
 
 function NEVAHEXUI:StyleIds(component)
 	self:EnsureLoaded()
-	if component then
-		return Styles.styleIds(component)
-	end
-	local out = {}
-	for _, entry in ipairs(Styles.catalog()) do
-		table.insert(out, entry.Id)
-	end
-	return out
+	-- Styles.catalog() is grouped per component, so the flat id list comes from
+	-- the registry's own order -- which also includes styles registered at runtime.
+	return Styles.styleIds(component)
 end
 
 function NEVAHEXUI:ListComponents()
@@ -13912,9 +13907,9 @@ end
 function NEVAHEXUI:PrintCatalog(filter)
 	self:EnsureLoaded()
 	local lines = {}
-	for _, entry in ipairs(Styles.catalog()) do
-		if not filter or entry.Component == filter or (entry.Id or ""):find(filter, 1, true) then
-			table.insert(lines, ("%s  (%s)  %s"):format(entry.Id, tostring(entry.Component), tostring(entry.Name)))
+	for _, style in ipairs(Styles.list()) do
+		if not filter or style.Component == filter or (style.Id or ""):find(filter, 1, true) then
+			table.insert(lines, ("%s  (%s)  %s"):format(style.Id, tostring(style.Component), tostring(style.Name)))
 		end
 	end
 	return lines
