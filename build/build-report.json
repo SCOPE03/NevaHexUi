@@ -166,7 +166,7 @@
     {
       "id": "Themes/Tokens",
       "path": "src/Themes/Tokens.luau",
-      "bytes": 2806,
+      "bytes": 2634,
       "requires": []
     },
     {
@@ -417,18 +417,18 @@
   "outputs": [
     {
       "file": "build/NEVAHEXUI.luau",
-      "bytes": 423368,
-      "hash": "1cdf437a7d89dab1"
+      "bytes": 423196,
+      "hash": "4cad820a6339adfc"
     },
     {
       "file": "build/NEVAHEXUI.min.lua",
-      "bytes": 371452,
-      "hash": "bdb0707c5fde7321"
+      "bytes": 371457,
+      "hash": "95874b876979c5a1"
     },
     {
       "file": "build/nevahexui-tests.luau",
-      "bytes": 441649,
-      "hash": "45410ca41ecd1a0e"
+      "bytes": 441477,
+      "hash": "c54adaae61dc6e34"
     }
   ]
 }

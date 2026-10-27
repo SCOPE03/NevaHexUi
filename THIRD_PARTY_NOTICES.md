@@ -2,14 +2,16 @@
 
 NEVAHEXUI is an independent implementation. **No third-party source code is
 vendored into this repository.** The Roblox UI libraries listed below were
-reviewed as *behavioural, architectural and visual reference* during design;
-their component APIs, configuration systems, theme engines, and distinctive
-visual styles were studied and independently implemented. The components,
-styles, theme engine, Style Studio and every other file under `src/` were
-written for this project. Colours, corner radii, spacing, and fonts in the
-default token set deliberately draw from the aesthetics of the listed libraries
-(Fluent, WindUI, Obsidian, LinoriaLib, Kavo UI, Rayfield, and others) to
-provide a library-informed appearance while remaining original implementation.
+reviewed as *behavioural and architectural references* during design; the
+components, styles, theme engine, Style Studio and every other file under
+`src/` were written for this project. Default design tokens match the
+specification from the referenced library implementations (Fluent, WindUI,
+Obsidian, LinoriaLib, Kavo UI, Rayfield and others) -- these are the same
+values the libraries use for their default renderers. No library code was
+copied verbatim; only the visual specification values (colours, corner
+radii, spacing, fonts) were referenced to ensure NEVAHEXUI's default
+appearance is consistent with the integrated libraries.
+
 
 ## Repositories reviewed
 
