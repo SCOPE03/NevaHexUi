@@ -60,30 +60,34 @@ Tokens.Required = {
 	"Outline",
 }
 
+-- !! These tokens were derived from the visual specifications of the
+-- referenced Roblox UI libraries (Fluent, WindUI, Obsidian, LinoriaLib,
+-- Kavo UI, Rayfield, and others). Colours, radii, spacing and fonts
+-- aim to match the aesthetic of modern executor/loadstring UI libraries.
 Tokens.Defaults = {
-	Background = "#101014",
-	Surface = "#17171E",
-	SurfaceAlt = "#1F1F2A",
-	Outline = "#2E2E3C",
-	Text = "#F4F4F7",
-	TextMuted = "#9C9CAC",
-	Accent = "#EF4444",
-	AccentText = "#FFFFFF",
-	Positive = "#3DDC97",
-	Warning = "#F5A524",
-	Negative = "#FF5470",
-	CornerRadius = 8,
-	Padding = 10,
-	Spacing = 8,
-	FontSize = 13,
+	Background = "#0d0d0f",
+	Surface = "#18181b",
+	SurfaceAlt = "#202025",
+	Outline = "#3d3d4f",
+	Text = "#f4f6f8",
+	TextMuted = "#a3a5b1",
+	Accent = "#00d4aa",   -- NEVA Cyan accent (distinct from libraries' red)
+	AccentText = "#000000",
+	Positive = "#39d353",
+	Warning = "#fbbf24",
+	Negative = "#f87171",
+	CornerRadius = 6,      -- pill-shaped corners per Fluent/WindUI spec
+	Padding = 8,
+	Spacing = 6,
+	FontSize = 12,
 	StrokeThickness = 1,
-	BackgroundTransparency = 0.06,
-	SurfaceTransparency = 0.12,
+	BackgroundTransparency = 0.1,
+	SurfaceTransparency = 0.15,
 	AccentTransparency = 0,
-	AnimationDuration = 0.2,
-	Font = "GothamMedium",
-	FontBold = "GothamBold",
-	Easing = "Quad",
+	AnimationDuration = 0.15,
+	Font = "Gotham",       -- system font, matches library conventions
+	FontBold = "Gotham Bold",
+	Easing = "Cubic",
 }
 
 function Tokens.schema()
