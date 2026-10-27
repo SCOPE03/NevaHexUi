@@ -335,7 +335,7 @@
     {
       "id": "Styles/Defs/Pickers",
       "path": "src/Styles/Defs/Pickers.luau",
-      "bytes": 15669,
+      "bytes": 15689,
       "requires": [
         "Styles/Helpers",
         "Styles/Registry",
@@ -356,7 +356,7 @@
     {
       "id": "Styles/Defs/TextInputs",
       "path": "src/Styles/Defs/TextInputs.luau",
-      "bytes": 18840,
+      "bytes": 18858,
       "requires": [
         "Styles/Helpers",
         "Styles/Registry",
@@ -417,18 +417,18 @@
   "outputs": [
     {
       "file": "build/NEVAHEXUI.luau",
-      "bytes": 414284,
-      "hash": "e8e01afbc57f7054"
+      "bytes": 414322,
+      "hash": "245b409fa0d5f428"
     },
     {
       "file": "build/NEVAHEXUI.min.lua",
-      "bytes": 366065,
-      "hash": "44a54e6c733308bf"
+      "bytes": 366095,
+      "hash": "f3823bd98e9179f7"
     },
     {
       "file": "build/nevahexui-tests.luau",
-      "bytes": 432565,
-      "hash": "3975231b0ebecf08"
+      "bytes": 432603,
+      "hash": "064d69af4c6d7850"
     }
   ]
 }

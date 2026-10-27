@@ -274,7 +274,8 @@ styles[#styles + 1] = {
 		view.Apply = function(self, state)
 			for _, entry in ipairs(self.Chips) do
 				local selected = type(state.Value) == "table" and Color.equals(entry.Colour, state.Value)
-				local stroke = entry.Instance.__nevaStroke or Helpers.stroke(host, entry.Instance, nil, 2, 0)
+				local stroke = entry.Instance.__nevaStroke
+					or Helpers.stroke(host, entry.Instance, ctx.Tokens.Outline, 2, 0)
 				entry.Instance.__nevaStroke = stroke
 				stroke.Color = selected and ctx.Tokens.Text or ctx.Tokens.Outline
 				stroke.Transparency = selected and 0 or 0.5

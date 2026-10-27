@@ -271,6 +271,7 @@ styles[#styles + 1] = {
 		})
 		local button = Surface.panel(ctx, panel, {
 			Name = "Copy",
+			Button = true,
 			Background = config.ButtonColor,
 			Token = "Accent",
 			Transparency = 0,
