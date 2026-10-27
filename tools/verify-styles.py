@@ -123,7 +123,7 @@ def main(argv):
     output = result.stdout + result.stderr
     print(output.strip())
 
-    warnings = [line for line in output.split("\n") if "ComponentDefaults" in line]
+    warnings = sorted({line.strip() for line in output.split("\n") if "unknown property" in line})
 
     def count(name):
         match = re.search(r"^%s=(\d+)$" % name, output, re.M)
@@ -141,13 +141,17 @@ def main(argv):
         if name not in output:
             problems.append("expected " + name)
 
-    print("\nstyle sweep: %d problem(s)" % len(problems))
-    for line in problems:
-        print("  " + line)
+    # A property that no style declares is configuration that silently does
+    # nothing, so it counts as a problem rather than a note.
     if warnings:
         print("%d schema warning(s) about properties the style does not declare:" % len(warnings))
         for line in warnings:
-            print("  " + line.strip())
+            print("  " + line)
+        problems.append("UNKNOWN_PROPERTIES=%d" % len(warnings))
+
+    print("\nstyle sweep: %d problem(s)" % len(problems))
+    for line in problems:
+        print("  " + line)
     return 1 if problems else 0
 
 

@@ -3016,10 +3016,7 @@ local layerConfig = layers[layerName]
 if next(layerConfig) ~= nil then
 
 local ok, cleanedLayer, errors, warnings = Schema.validate(properties, layerConfig, {
-
-AllowUnknown = layerName == "ComponentDefaults"
-or layerName == "ComponentConfiguration"
-or layerName == "RuntimeOverrides",
+AllowUnknown = layerName == "ComponentConfiguration" or layerName == "RuntimeOverrides",
 })
 for _, message in ipairs(warnings) do
 table.insert(result.Warnings, ("%s: %s"):format(layerName, message))
@@ -10901,7 +10898,6 @@ Defaults = {
 Width = 320,
 ButtonHeight = 28,
 TextSize = 13,
-Dismissible = true,
 Animation = "smooth",
 },
 Properties = {

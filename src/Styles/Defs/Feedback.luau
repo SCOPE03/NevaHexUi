@@ -48,7 +48,6 @@ Registry.registerComponent({
 		Width = 320,
 		ButtonHeight = 28,
 		TextSize = 13,
-		Dismissible = true,
 		Animation = "smooth",
 	},
 	Properties = {
