@@ -9071,9 +9071,9 @@ Message = options.Message,
 Level = options.Level or "Info",
 },
 }
+
 local component = self.Context:Create("Notification", proxy, spec)
 component.Window = self
-self.Context:RegisterComponent(component)
 table.insert(self.Notifications, component)
 local duration = options.Duration
 if duration == nil then
@@ -9137,9 +9137,9 @@ Actions = actions,
 },
 OnChoose = options.OnChoose,
 }
+
 local component = self.Context:Create("Dialog", proxy, spec)
 component.Window = self
-self.Context:RegisterComponent(component)
 local view = component.View
 if view and view.Root then
 view.Root.Position = host.udim2(0.5, 0, 0.5, 0)

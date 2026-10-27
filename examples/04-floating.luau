@@ -21,6 +21,7 @@ Section:CreateButton({ Name = "Server hop", Flag = "Hop", Style = { Id = "button
 Section:CreateIconButton({ Name = "Settings", Flag = "IconSettings", Icon = "rbxassetid://6031075931", Style = { Id = "iconbutton.rounded" } })
 Section:CreateProgressBar({ Name = "Loading", Default = 0.42, ShowValue = true, Style = { Id = "progressbar.bar" } })
 
+-- The Floating layout keeps its own chrome; position it once at startup.
 Window:SetPosition(40, 40)
-Window:Drag = true
-print("Example 04 ready: layout", Window:GetLayout(), "draggable:", NEVAHEXUI.Layouts.get("Floating").Draggable)
+local Layout = NEVAHEXUI.Layouts.get("Floating")
+print("Example 04 ready: layout", Window:GetLayout(), "draggable:", Layout and Layout.Draggable)

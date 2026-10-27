@@ -270,7 +270,7 @@
     {
       "id": "Core/Window",
       "path": "src/Core/Window.luau",
-      "bytes": 26091,
+      "bytes": 26236,
       "requires": [
         "Configuration/Config",
         "Core/Container",
@@ -407,18 +407,18 @@
   "outputs": [
     {
       "file": "build/NEVAHEXUI.luau",
-      "bytes": 407656,
-      "hash": "8939b4d27b0d4082"
+      "bytes": 407801,
+      "hash": "69dda97b1fa9e1cc"
     },
     {
       "file": "build/NEVAHEXUI.min.lua",
-      "bytes": 362396,
-      "hash": "38e091acb14683a5"
+      "bytes": 362314,
+      "hash": "3df95ecab4c99a80"
     },
     {
       "file": "build/nevahexui-tests.luau",
-      "bytes": 425937,
-      "hash": "54ca8439988b8151"
+      "bytes": 426082,
+      "hash": "35c4c7cbb076c698"
     }
   ]
 }

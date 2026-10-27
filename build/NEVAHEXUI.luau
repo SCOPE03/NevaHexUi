@@ -9450,9 +9450,10 @@ function Window:Notify(options)
 			Level = options.Level or "Info",
 		},
 	}
+	-- Context:Create registers the component exactly once; registering it again
+	-- here would duplicate it in the store and inflate the component count.
 	local component = self.Context:Create("Notification", proxy, spec)
 	component.Window = self
-	self.Context:RegisterComponent(component)
 	table.insert(self.Notifications, component)
 	local duration = options.Duration
 	if duration == nil then
@@ -9516,9 +9517,9 @@ function Window:Dialog(options)
 		},
 		OnChoose = options.OnChoose,
 	}
+	-- Registered by Context:Create; a second registration would double-count it.
 	local component = self.Context:Create("Dialog", proxy, spec)
 	component.Window = self
-	self.Context:RegisterComponent(component)
 	local view = component.View
 	if view and view.Root then
 		view.Root.Position = host.udim2(0.5, 0, 0.5, 0)

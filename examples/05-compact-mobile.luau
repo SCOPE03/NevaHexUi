@@ -22,7 +22,7 @@ local Section = Tab:CreateSection({ Name = "Touch controls" })
 
 Section:CreateToggle({ Name = "Auto sprint", Flag = "AutoSprint", Default = true, Style = { Id = "toggle.neon" } })
 Section:CreateSlider({ Name = "Sensitivity", Flag = "Sensitivity", Min = 1, Max = 10, Default = 5, Style = { Id = "slider.stepped" } })
-Section:CreateDropdownPlaceholder = nil
+Section:CreateTextbox({ Name = "Search", Flag = "MobileSearch", Default = "", Placeholder = "Filter settings" })
 Section:CreateButton({ Name = "Apply", Flag = "ApplyMobile", Style = { Id = "button.modern" }, Callback = function() Window:Notify({ Message = "Applied", Level = "Success" }) end })
 Section:CreateLoader({ Name = "Syncing", Default = true, Style = { Id = "loader.dots" } })
 
