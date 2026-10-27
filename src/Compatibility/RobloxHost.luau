@@ -6,6 +6,8 @@
 	This module is only constructed when a Roblox runtime is detected.
 ]]
 
+local PressEvents = require("NEVA:Compatibility/PressEvents")
+
 local RobloxHost = {}
 
 local function safeCall(fn, ...)
@@ -139,15 +141,34 @@ function RobloxHost.new(capabilities)
 		return instance[prop]
 	end
 
-	host.connect = function(instance, event, callback)
-		local signal = instance[event]
-		if signal == nil or type(signal.Connect) ~= "function" then
-			return { Disconnect = function() end }
-		end
-		local connection = safeCall(function()
-			return signal:Connect(callback)
+	-- Indexing an instance with an event it does not own raises in Roblox, so
+	-- the event lookup is guarded; a button event asked of a non-button instance
+	-- is translated into the GuiObject input events (see Compatibility/PressEvents).
+	local function nativeSignal(instance, event)
+		local ok, signal = pcall(function()
+			return instance[event]
 		end)
-		return connection or { Disconnect = function() end }
+		if ok and signal ~= nil and type(signal.Connect) == "function" then
+			return signal
+		end
+		return nil
+	end
+
+	host.connect = function(instance, event, callback)
+		local signal = nativeSignal(instance, event)
+		if signal then
+			local connection = safeCall(function()
+				return signal:Connect(callback)
+			end)
+			return connection or { Disconnect = function() end }
+		end
+		if PressEvents.ButtonOnly[event] then
+			local handle = PressEvents.fallback(host.connect, instance, event, callback)
+			if handle then
+				return handle
+			end
+		end
+		return { Disconnect = function() end }
 	end
 
 	host.destroy = function(instance)

@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generatedModules": 42,
+  "generatedModules": 43,
   "modules": [
     {
       "id": "Animation/Presets",
@@ -15,16 +15,26 @@
       "requires": []
     },
     {
+      "id": "Compatibility/PressEvents",
+      "path": "src/Compatibility/PressEvents.luau",
+      "bytes": 3355,
+      "requires": []
+    },
+    {
       "id": "Compatibility/MockHost",
       "path": "src/Compatibility/MockHost.luau",
-      "bytes": 13790,
-      "requires": []
+      "bytes": 15576,
+      "requires": [
+        "Compatibility/PressEvents"
+      ]
     },
     {
       "id": "Compatibility/RobloxHost",
       "path": "src/Compatibility/RobloxHost.luau",
-      "bytes": 10551,
-      "requires": []
+      "bytes": 11222,
+      "requires": [
+        "Compatibility/PressEvents"
+      ]
     },
     {
       "id": "Compatibility/Host",
@@ -270,7 +280,7 @@
     {
       "id": "Core/Window",
       "path": "src/Core/Window.luau",
-      "bytes": 26236,
+      "bytes": 26491,
       "requires": [
         "Configuration/Config",
         "Core/Container",
@@ -407,18 +417,18 @@
   "outputs": [
     {
       "file": "build/NEVAHEXUI.luau",
-      "bytes": 407825,
-      "hash": "aac7dea1bf840a4c"
+      "bytes": 413935,
+      "hash": "814f7521a362e9c1"
     },
     {
       "file": "build/NEVAHEXUI.min.lua",
-      "bytes": 362188,
-      "hash": "be47d467c275e44b"
+      "bytes": 365921,
+      "hash": "198792d613f28830"
     },
     {
       "file": "build/nevahexui-tests.luau",
-      "bytes": 426106,
-      "hash": "6b208aa5b41b4c02"
+      "bytes": 432216,
+      "hash": "375ab1730d17635d"
     }
   ]
 }

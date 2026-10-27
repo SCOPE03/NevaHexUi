@@ -145,12 +145,17 @@ function Window:BuildChrome()
 	local chromeHeight = self.Layout.Chrome == "Minimal" and 34 or 40
 	self.ChromeHeight = chromeHeight
 
-	self.TitleBar = host.new("Frame", {
+	-- A TextButton, not a Frame: only GuiButton instances own MouseButton1Down/Up,
+	-- and a Frame that is not Active never receives InputBegan either, so the
+	-- title bar would neither drag nor report a press.
+	self.TitleBar = host.new("TextButton", {
 		Name = "TitleBar",
 		BackgroundColor3 = tokens.Surface,
 		BackgroundTransparency = 0.15,
 		BorderSizePixel = 0,
 		Size = host.udim2(1, 0, 0, chromeHeight),
+		Text = "",
+		AutoButtonColor = false,
 		ZIndex = 3,
 	}, self.Root)
 	Helpers.corner(host, self.TitleBar, tokens.CornerRadius or 8)

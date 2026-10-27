@@ -6,6 +6,8 @@
 	framework's behaviour verifiable without a Roblox runtime.
 ]]
 
+local PressEvents = require("NEVA:Compatibility/PressEvents")
+
 local MockHost = {}
 
 local MockInstance = {}
@@ -199,6 +201,7 @@ function MockHost.new(options)
 	host.Clipboard = nil
 	host.Files = {}
 	host.Folders = {}
+	host.UnsupportedPressConnections = {}
 
 	local capabilities = {}
 	for key, value in pairs(DEFAULT_CAPABILITIES) do
@@ -301,8 +304,52 @@ function MockHost.new(options)
 		return instance[prop]
 	end
 
+	-- Mirrors Roblox: button events live on GuiButton instances only. Asking a
+	-- Frame for one is an error there, not an event that never fires, so the mock
+	-- is strict about it -- that strictness is what lets the headless tests catch
+	-- a button event wired to the wrong instance class.
+	local BUTTON_CLASSES = { TextButton = true, ImageButton = true }
+
+	local function supportsEvent(instance, event)
+		if not PressEvents.ButtonOnly[event] then
+			return true
+		end
+		return BUTTON_CLASSES[rawget(instance, "_props").ClassName] == true
+	end
+
 	host.connect = function(instance, event, callback)
-		return MockInstance._signal(instance, event):Connect(callback)
+		if supportsEvent(instance, event) then
+			return MockInstance._signal(instance, event):Connect(callback)
+		end
+		table.insert(host.UnsupportedPressConnections, {
+			Instance = instance,
+			ClassName = rawget(instance, "_props").ClassName,
+			Event = event,
+		})
+		local handle = PressEvents.fallback(host.connect, instance, event, callback)
+		return handle or { Disconnect = function() end }
+	end
+
+	-- A real click, routed the way Roblox routes it: button events where they
+	-- exist, InputBegan / InputEnded everywhere else.
+	host.click = function(instance, position)
+		local input = {
+			UserInputType = "Enum.UserInputType.MouseButton1",
+			Position = position or host.vector2(0, 0),
+			KeyCode = "Enum.KeyCode.Unknown",
+		}
+		MockInstance._emit(instance, "InputBegan", input)
+		if supportsEvent(instance, "MouseButton1Down") then
+			MockInstance._emit(instance, "MouseButton1Down", input)
+		end
+		MockInstance._emit(instance, "InputEnded", input)
+		if supportsEvent(instance, "MouseButton1Up") then
+			MockInstance._emit(instance, "MouseButton1Up", input)
+		end
+		if supportsEvent(instance, "MouseButton1Click") then
+			MockInstance._emit(instance, "MouseButton1Click", input)
+		end
+		return true
 	end
 
 	host.destroy = function(instance)

@@ -274,7 +274,108 @@ end
 return Capabilities
 end)()
 
+local __NEVA_Compatibility_PressEvents = (function()
+
+local PressEvents = {}
+
+PressEvents.ButtonOnly = {
+MouseButton1Down = true,
+MouseButton1Up = true,
+MouseButton1Click = true,
+MouseButton2Down = true,
+MouseButton2Up = true,
+MouseButton2Click = true,
+Activated = true,
+}
+
+PressEvents.Fallback = {
+MouseButton1Down = "InputBegan",
+MouseButton2Down = "InputBegan",
+MouseButton1Up = "InputEnded",
+MouseButton2Up = "InputEnded",
+MouseButton1Click = "Press",
+MouseButton2Click = "Press",
+Activated = "Press",
+}
+
+PressEvents.InputType = {
+MouseButton1Down = "MouseButton1",
+MouseButton1Up = "MouseButton1",
+MouseButton1Click = "MouseButton1",
+Activated = "MouseButton1",
+MouseButton2Down = "MouseButton2",
+MouseButton2Up = "MouseButton2",
+MouseButton2Click = "MouseButton2",
+}
+
+local function inputTypeName(input)
+if input == nil then
+return nil
+end
+local value = input.UserInputType
+if value == nil then
+return nil
+end
+
+return tostring(value):match("([%w]+)$")
+end
+
+function PressEvents.fallback(connect, instance, event, callback)
+local target = PressEvents.Fallback[event]
+if not target then
+return nil, ("%s is not available on this instance"):format(tostring(event))
+end
+
+local expected = PressEvents.InputType[event]
+local function matches(input)
+if expected == nil then
+return true
+end
+local name = inputTypeName(input)
+if name == expected then
+return true
+end
+return expected == "MouseButton1" and name == "Touch"
+end
+
+if target == "InputBegan" or target == "InputEnded" then
+return connect(instance, target, function(input)
+if matches(input) then
+callback(input)
+end
+end)
+end
+
+local pending = false
+local begin = connect(instance, "InputBegan", function(input)
+if matches(input) then
+pending = true
+end
+end)
+local finish = connect(instance, "InputEnded", function(input)
+if pending and matches(input) then
+pending = false
+callback(input)
+end
+end)
+local handle = {}
+function handle:Disconnect()
+if begin then
+begin:Disconnect()
+end
+if finish then
+finish:Disconnect()
+end
+end
+return handle
+end
+
+return PressEvents
+end)()
+
 local __NEVA_Compatibility_MockHost = (function()
+
+local PressEvents = __NEVA_Compatibility_PressEvents
 
 local MockHost = {}
 
@@ -467,6 +568,7 @@ host.DestroyedInstances = {}
 host.Clipboard = nil
 host.Files = {}
 host.Folders = {}
+host.UnsupportedPressConnections = {}
 
 local capabilities = {}
 for key, value in pairs(DEFAULT_CAPABILITIES) do
@@ -569,8 +671,46 @@ host.get = function(instance, prop)
 return instance[prop]
 end
 
+local BUTTON_CLASSES = { TextButton = true, ImageButton = true }
+
+local function supportsEvent(instance, event)
+if not PressEvents.ButtonOnly[event] then
+return true
+end
+return BUTTON_CLASSES[rawget(instance, "_props").ClassName] == true
+end
+
 host.connect = function(instance, event, callback)
+if supportsEvent(instance, event) then
 return MockInstance._signal(instance, event):Connect(callback)
+end
+table.insert(host.UnsupportedPressConnections, {
+Instance = instance,
+ClassName = rawget(instance, "_props").ClassName,
+Event = event,
+})
+local handle = PressEvents.fallback(host.connect, instance, event, callback)
+return handle or { Disconnect = function() end }
+end
+
+host.click = function(instance, position)
+local input = {
+UserInputType = "Enum.UserInputType.MouseButton1",
+Position = position or host.vector2(0, 0),
+KeyCode = "Enum.KeyCode.Unknown",
+}
+MockInstance._emit(instance, "InputBegan", input)
+if supportsEvent(instance, "MouseButton1Down") then
+MockInstance._emit(instance, "MouseButton1Down", input)
+end
+MockInstance._emit(instance, "InputEnded", input)
+if supportsEvent(instance, "MouseButton1Up") then
+MockInstance._emit(instance, "MouseButton1Up", input)
+end
+if supportsEvent(instance, "MouseButton1Click") then
+MockInstance._emit(instance, "MouseButton1Click", input)
+end
+return true
 end
 
 host.destroy = function(instance)
@@ -846,6 +986,8 @@ end)()
 
 local __NEVA_Compatibility_RobloxHost = (function()
 
+local PressEvents = __NEVA_Compatibility_PressEvents
+
 local RobloxHost = {}
 
 local function safeCall(fn, ...)
@@ -979,15 +1121,31 @@ host.get = function(instance, prop)
 return instance[prop]
 end
 
-host.connect = function(instance, event, callback)
-local signal = instance[event]
-if signal == nil or type(signal.Connect) ~= "function" then
-return { Disconnect = function() end }
+local function nativeSignal(instance, event)
+local ok, signal = pcall(function()
+return instance[event]
+end)
+if ok and signal ~= nil and type(signal.Connect) == "function" then
+return signal
 end
+return nil
+end
+
+host.connect = function(instance, event, callback)
+local signal = nativeSignal(instance, event)
+if signal then
 local connection = safeCall(function()
 return signal:Connect(callback)
 end)
 return connection or { Disconnect = function() end }
+end
+if PressEvents.ButtonOnly[event] then
+local handle = PressEvents.fallback(host.connect, instance, event, callback)
+if handle then
+return handle
+end
+end
+return { Disconnect = function() end }
 end
 
 host.destroy = function(instance)
@@ -8621,12 +8779,14 @@ end
 local chromeHeight = self.Layout.Chrome == "Minimal" and 34 or 40
 self.ChromeHeight = chromeHeight
 
-self.TitleBar = host.new("Frame", {
+self.TitleBar = host.new("TextButton", {
 Name = "TitleBar",
 BackgroundColor3 = tokens.Surface,
 BackgroundTransparency = 0.15,
 BorderSizePixel = 0,
 Size = host.udim2(1, 0, 0, chromeHeight),
+Text = "",
+AutoButtonColor = false,
 ZIndex = 3,
 }, self.Root)
 Helpers.corner(host, self.TitleBar, tokens.CornerRadius or 8)

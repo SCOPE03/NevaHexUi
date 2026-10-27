@@ -436,6 +436,128 @@ end
 return Capabilities
 end)()
 
+local __NEVA_Compatibility_PressEvents = (function()
+--[[
+	NEVAHEXUI - Compatibility/PressEvents
+
+	Button events (MouseButton1Down/Up/Click, Activated) exist on GuiButton
+	instances only. Indexing a Frame with one of them does not return nil in
+	Roblox, it raises:
+
+		MouseButton1Down is not a valid member of Frame "..."
+
+	so the event lookup has to be guarded, and a request for a button event on a
+	non-button instance has to be translated into what that instance really
+	offers: InputBegan / InputEnded, which every GuiObject has. Both host back
+	ends share this rule so the headless model behaves like the real one.
+]]
+
+local PressEvents = {}
+
+-- Events that only GuiButton (TextButton / ImageButton) instances own.
+PressEvents.ButtonOnly = {
+	MouseButton1Down = true,
+	MouseButton1Up = true,
+	MouseButton1Click = true,
+	MouseButton2Down = true,
+	MouseButton2Up = true,
+	MouseButton2Click = true,
+	Activated = true,
+}
+
+-- How each button event is satisfied on an instance that lacks it. "Press" is
+-- resolved to an InputBegan/InputEnded pair so a click still needs a release.
+PressEvents.Fallback = {
+	MouseButton1Down = "InputBegan",
+	MouseButton2Down = "InputBegan",
+	MouseButton1Up = "InputEnded",
+	MouseButton2Up = "InputEnded",
+	MouseButton1Click = "Press",
+	MouseButton2Click = "Press",
+	Activated = "Press",
+}
+
+-- Which input a fallback connection reacts to. A left-click fallback also
+-- accepts touch, so press handling keeps working on mobile.
+PressEvents.InputType = {
+	MouseButton1Down = "MouseButton1",
+	MouseButton1Up = "MouseButton1",
+	MouseButton1Click = "MouseButton1",
+	Activated = "MouseButton1",
+	MouseButton2Down = "MouseButton2",
+	MouseButton2Up = "MouseButton2",
+	MouseButton2Click = "MouseButton2",
+}
+
+local function inputTypeName(input)
+	if input == nil then
+		return nil
+	end
+	local value = input.UserInputType
+	if value == nil then
+		return nil
+	end
+	-- Roblox hands back an EnumItem (tostring "Enum.UserInputType.MouseButton1"),
+	-- the mock hands back the same string shape.
+	return tostring(value):match("([%w]+)$")
+end
+
+-- connect: function(instance, event, callback) -> connection, provided by the
+-- host so the fallback itself is implemented once per back end surface.
+function PressEvents.fallback(connect, instance, event, callback)
+	local target = PressEvents.Fallback[event]
+	if not target then
+		return nil, ("%s is not available on this instance"):format(tostring(event))
+	end
+
+	local expected = PressEvents.InputType[event]
+	local function matches(input)
+		if expected == nil then
+			return true
+		end
+		local name = inputTypeName(input)
+		if name == expected then
+			return true
+		end
+		return expected == "MouseButton1" and name == "Touch"
+	end
+
+	if target == "InputBegan" or target == "InputEnded" then
+		return connect(instance, target, function(input)
+			if matches(input) then
+				callback(input)
+			end
+		end)
+	end
+
+	-- Click: require a press and a release on the same instance.
+	local pending = false
+	local begin = connect(instance, "InputBegan", function(input)
+		if matches(input) then
+			pending = true
+		end
+	end)
+	local finish = connect(instance, "InputEnded", function(input)
+		if pending and matches(input) then
+			pending = false
+			callback(input)
+		end
+	end)
+	local handle = {}
+	function handle:Disconnect()
+		if begin then
+			begin:Disconnect()
+		end
+		if finish then
+			finish:Disconnect()
+		end
+	end
+	return handle
+end
+
+return PressEvents
+end)()
+
 local __NEVA_Compatibility_MockHost = (function()
 --[[
 	NEVAHEXUI - Compatibility/MockHost
@@ -444,6 +566,8 @@ local __NEVA_Compatibility_MockHost = (function()
 	stubs. Every NEVAHEXUI module is host agnostic, which is what makes the
 	framework's behaviour verifiable without a Roblox runtime.
 ]]
+
+local PressEvents = __NEVA_Compatibility_PressEvents
 
 local MockHost = {}
 
@@ -638,6 +762,7 @@ function MockHost.new(options)
 	host.Clipboard = nil
 	host.Files = {}
 	host.Folders = {}
+	host.UnsupportedPressConnections = {}
 
 	local capabilities = {}
 	for key, value in pairs(DEFAULT_CAPABILITIES) do
@@ -740,8 +865,52 @@ function MockHost.new(options)
 		return instance[prop]
 	end
 
+	-- Mirrors Roblox: button events live on GuiButton instances only. Asking a
+	-- Frame for one is an error there, not an event that never fires, so the mock
+	-- is strict about it -- that strictness is what lets the headless tests catch
+	-- a button event wired to the wrong instance class.
+	local BUTTON_CLASSES = { TextButton = true, ImageButton = true }
+
+	local function supportsEvent(instance, event)
+		if not PressEvents.ButtonOnly[event] then
+			return true
+		end
+		return BUTTON_CLASSES[rawget(instance, "_props").ClassName] == true
+	end
+
 	host.connect = function(instance, event, callback)
-		return MockInstance._signal(instance, event):Connect(callback)
+		if supportsEvent(instance, event) then
+			return MockInstance._signal(instance, event):Connect(callback)
+		end
+		table.insert(host.UnsupportedPressConnections, {
+			Instance = instance,
+			ClassName = rawget(instance, "_props").ClassName,
+			Event = event,
+		})
+		local handle = PressEvents.fallback(host.connect, instance, event, callback)
+		return handle or { Disconnect = function() end }
+	end
+
+	-- A real click, routed the way Roblox routes it: button events where they
+	-- exist, InputBegan / InputEnded everywhere else.
+	host.click = function(instance, position)
+		local input = {
+			UserInputType = "Enum.UserInputType.MouseButton1",
+			Position = position or host.vector2(0, 0),
+			KeyCode = "Enum.KeyCode.Unknown",
+		}
+		MockInstance._emit(instance, "InputBegan", input)
+		if supportsEvent(instance, "MouseButton1Down") then
+			MockInstance._emit(instance, "MouseButton1Down", input)
+		end
+		MockInstance._emit(instance, "InputEnded", input)
+		if supportsEvent(instance, "MouseButton1Up") then
+			MockInstance._emit(instance, "MouseButton1Up", input)
+		end
+		if supportsEvent(instance, "MouseButton1Click") then
+			MockInstance._emit(instance, "MouseButton1Click", input)
+		end
+		return true
 	end
 
 	host.destroy = function(instance)
@@ -1027,6 +1196,8 @@ local __NEVA_Compatibility_RobloxHost = (function()
 	This module is only constructed when a Roblox runtime is detected.
 ]]
 
+local PressEvents = __NEVA_Compatibility_PressEvents
+
 local RobloxHost = {}
 
 local function safeCall(fn, ...)
@@ -1160,15 +1331,34 @@ function RobloxHost.new(capabilities)
 		return instance[prop]
 	end
 
-	host.connect = function(instance, event, callback)
-		local signal = instance[event]
-		if signal == nil or type(signal.Connect) ~= "function" then
-			return { Disconnect = function() end }
-		end
-		local connection = safeCall(function()
-			return signal:Connect(callback)
+	-- Indexing an instance with an event it does not own raises in Roblox, so
+	-- the event lookup is guarded; a button event asked of a non-button instance
+	-- is translated into the GuiObject input events (see Compatibility/PressEvents).
+	local function nativeSignal(instance, event)
+		local ok, signal = pcall(function()
+			return instance[event]
 		end)
-		return connection or { Disconnect = function() end }
+		if ok and signal ~= nil and type(signal.Connect) == "function" then
+			return signal
+		end
+		return nil
+	end
+
+	host.connect = function(instance, event, callback)
+		local signal = nativeSignal(instance, event)
+		if signal then
+			local connection = safeCall(function()
+				return signal:Connect(callback)
+			end)
+			return connection or { Disconnect = function() end }
+		end
+		if PressEvents.ButtonOnly[event] then
+			local handle = PressEvents.fallback(host.connect, instance, event, callback)
+			if handle then
+				return handle
+			end
+		end
+		return { Disconnect = function() end }
 	end
 
 	host.destroy = function(instance)
@@ -9127,12 +9317,17 @@ function Window:BuildChrome()
 	local chromeHeight = self.Layout.Chrome == "Minimal" and 34 or 40
 	self.ChromeHeight = chromeHeight
 
-	self.TitleBar = host.new("Frame", {
+	-- A TextButton, not a Frame: only GuiButton instances own MouseButton1Down/Up,
+	-- and a Frame that is not Active never receives InputBegan either, so the
+	-- title bar would neither drag nor report a press.
+	self.TitleBar = host.new("TextButton", {
 		Name = "TitleBar",
 		BackgroundColor3 = tokens.Surface,
 		BackgroundTransparency = 0.15,
 		BorderSizePixel = 0,
 		Size = host.udim2(1, 0, 0, chromeHeight),
+		Text = "",
+		AutoButtonColor = false,
 		ZIndex = 3,
 	}, self.Root)
 	Helpers.corner(host, self.TitleBar, tokens.CornerRadius or 8)
