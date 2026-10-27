@@ -7682,7 +7682,8 @@ function Surface.panel(ctx, parent, options)
 options = options or {}
 local host = ctx.Host
 local config = ctx.Configuration
-local frame = host.new("Frame", {
+
+local props = {
 Name = options.Name or "Panel",
 BackgroundColor3 = Surface.color(ctx, options.Background, options.Token or "SurfaceAlt"),
 BackgroundTransparency = options.Transparency or 0,
@@ -7692,7 +7693,12 @@ Position = options.Position,
 Visible = options.Visible ~= false,
 ClipsDescendants = options.ClipsDescendants == true,
 LayoutOrder = options.Order or 0,
-}, parent)
+}
+if options.Button then
+props.Text = ""
+props.AutoButtonColor = false
+end
+local frame = host.new(options.Button and "TextButton" or "Frame", props, parent)
 local radius = options.CornerRadius
 if radius == nil then
 radius = config.CornerRadius
@@ -11293,6 +11299,7 @@ ControlWidth = panelWidth,
 local parent = slot.ControlArea or slot.Root
 local preview = Surface.panel(ctx, parent, {
 Name = "Preview",
+Button = true,
 Background = ctx.State.Value,
 Token = "Accent",
 Transparency = 0,

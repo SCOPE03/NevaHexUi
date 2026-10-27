@@ -136,6 +136,7 @@ local function pickerGridRender(options)
 		local parent = slot.ControlArea or slot.Root
 		local preview = Surface.panel(ctx, parent, {
 			Name = "Preview",
+			Button = true,
 			Background = ctx.State.Value,
 			Token = "Accent",
 			Transparency = 0,

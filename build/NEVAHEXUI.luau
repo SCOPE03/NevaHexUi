@@ -8038,7 +8038,10 @@ function Surface.panel(ctx, parent, options)
 	options = options or {}
 	local host = ctx.Host
 	local config = ctx.Configuration
-	local frame = host.new("Frame", {
+	-- `Button` makes the panel a real press surface. A Frame owns no
+	-- MouseButton events, and an inactive Frame never receives InputBegan
+	-- either, so anything clickable has to be a GuiButton.
+	local props = {
 		Name = options.Name or "Panel",
 		BackgroundColor3 = Surface.color(ctx, options.Background, options.Token or "SurfaceAlt"),
 		BackgroundTransparency = options.Transparency or 0,
@@ -8048,7 +8051,12 @@ function Surface.panel(ctx, parent, options)
 		Visible = options.Visible ~= false,
 		ClipsDescendants = options.ClipsDescendants == true,
 		LayoutOrder = options.Order or 0,
-	}, parent)
+	}
+	if options.Button then
+		props.Text = ""
+		props.AutoButtonColor = false
+	end
+	local frame = host.new(options.Button and "TextButton" or "Frame", props, parent)
 	local radius = options.CornerRadius
 	if radius == nil then
 		radius = config.CornerRadius
@@ -11761,6 +11769,7 @@ local function pickerGridRender(options)
 		local parent = slot.ControlArea or slot.Root
 		local preview = Surface.panel(ctx, parent, {
 			Name = "Preview",
+			Button = true,
 			Background = ctx.State.Value,
 			Token = "Accent",
 			Transparency = 0,

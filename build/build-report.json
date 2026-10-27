@@ -256,7 +256,7 @@
     {
       "id": "Styles/Surface",
       "path": "src/Styles/Surface.luau",
-      "bytes": 7891,
+      "bytes": 8222,
       "requires": [
         "Animation/Presets",
         "Styles/Helpers",
@@ -335,7 +335,7 @@
     {
       "id": "Styles/Defs/Pickers",
       "path": "src/Styles/Defs/Pickers.luau",
-      "bytes": 15651,
+      "bytes": 15669,
       "requires": [
         "Styles/Helpers",
         "Styles/Registry",
@@ -417,18 +417,18 @@
   "outputs": [
     {
       "file": "build/NEVAHEXUI.luau",
-      "bytes": 413935,
-      "hash": "814f7521a362e9c1"
+      "bytes": 414284,
+      "hash": "e8e01afbc57f7054"
     },
     {
       "file": "build/NEVAHEXUI.min.lua",
-      "bytes": 365921,
-      "hash": "198792d613f28830"
+      "bytes": 366065,
+      "hash": "44a54e6c733308bf"
     },
     {
       "file": "build/nevahexui-tests.luau",
-      "bytes": 432216,
-      "hash": "375ab1730d17635d"
+      "bytes": 432565,
+      "hash": "3975231b0ebecf08"
     }
   ]
 }
