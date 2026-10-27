@@ -337,6 +337,8 @@ local function iconButtonRender(options)
 	end
 end
 
+
+
 styles[#styles + 1] = {
 	Id = "iconbutton.rounded",
 	Name = "Rounded icon",

@@ -295,7 +295,7 @@
     {
       "id": "Styles/Defs/Buttons",
       "path": "src/Styles/Defs/Buttons.luau",
-      "bytes": 13452,
+      "bytes": 13454,
       "requires": [
         "Styles/Helpers",
         "Styles/Registry",
@@ -366,7 +366,7 @@
     {
       "id": "Styles/Defs/Toggles",
       "path": "src/Styles/Defs/Toggles.luau",
-      "bytes": 16930,
+      "bytes": 17289,
       "requires": [
         "Styles/Helpers",
         "Styles/Registry",
@@ -417,18 +417,18 @@
   "outputs": [
     {
       "file": "build/NEVAHEXUI.luau",
-      "bytes": 423196,
-      "hash": "4cad820a6339adfc"
+      "bytes": 423557,
+      "hash": "5ca162ccb13de6d2"
     },
     {
       "file": "build/NEVAHEXUI.min.lua",
-      "bytes": 371457,
-      "hash": "95874b876979c5a1"
+      "bytes": 371808,
+      "hash": "d0acf994724b33bd"
     },
     {
       "file": "build/nevahexui-tests.luau",
-      "bytes": 441477,
-      "hash": "c54adaae61dc6e34"
+      "bytes": 441838,
+      "hash": "633cbb7a202ffbec"
     }
   ]
 }

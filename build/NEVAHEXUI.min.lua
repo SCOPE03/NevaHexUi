@@ -13183,6 +13183,15 @@ Description = "Translucent switch with a gradient track and soft rim.",
 Tags = { "glass", "translucent" },
 Render = switchRender({ shape = "pill", radius = "pill", trackToken = "Surface" }),
 }
+styles[#styles + 1] = {
+Id = "toggle.maclib",
+Name = "MacLib Switch",
+Component = "Toggle",
+Category = "Controls",
+Description = "Switch with MacLib-inspired compact geometry and animation.",
+Tags = { "maclib", "switch" },
+Render = switchRender({ shape = "pill", radius = 6, trackToken = "Surface", Animation = "spring", AnimationDuration = 0.3 }),
+}
 
 styles[#styles + 1] = {
 Id = "checkbox.standard",
