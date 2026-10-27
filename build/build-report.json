@@ -91,7 +91,7 @@
     {
       "id": "Styles/Resolver",
       "path": "src/Styles/Resolver.luau",
-      "bytes": 6680,
+      "bytes": 6985,
       "requires": [
         "Core/Util",
         "Styles/Registry",
@@ -366,7 +366,7 @@
     {
       "id": "Styles/Defs/Toggles",
       "path": "src/Styles/Defs/Toggles.luau",
-      "bytes": 16967,
+      "bytes": 16930,
       "requires": [
         "Styles/Helpers",
         "Styles/Registry",
@@ -417,18 +417,18 @@
   "outputs": [
     {
       "file": "build/NEVAHEXUI.luau",
-      "bytes": 414322,
-      "hash": "245b409fa0d5f428"
+      "bytes": 414590,
+      "hash": "afe27260a3900f0e"
     },
     {
       "file": "build/NEVAHEXUI.min.lua",
-      "bytes": 366095,
-      "hash": "f3823bd98e9179f7"
+      "bytes": 366099,
+      "hash": "c9cf5e6abe36dc9b"
     },
     {
       "file": "build/nevahexui-tests.luau",
-      "bytes": 432603,
-      "hash": "064d69af4c6d7850"
+      "bytes": 432871,
+      "hash": "9b9218473356520b"
     }
   ]
 }

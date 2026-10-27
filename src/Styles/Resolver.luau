@@ -118,7 +118,13 @@ function Resolver.resolve(request)
 			-- Validate each layer against the effective schema so unknown or
 			-- mistyped properties are attributed to the layer that supplied them.
 			local ok, cleanedLayer, errors, warnings = Schema.validate(properties, layerConfig, {
-				AllowUnknown = layerName == "ComponentConfiguration" or layerName == "RuntimeOverrides",
+				-- ComponentDefaults belong to the component descriptor and are
+				-- validated where they are declared; a style may legitimately ignore
+				-- one (a Dialog's Dismissible flag), so re-checking them against
+				-- every style schema only produced noise.
+				AllowUnknown = layerName == "ComponentDefaults"
+					or layerName == "ComponentConfiguration"
+					or layerName == "RuntimeOverrides",
 			})
 			for _, message in ipairs(warnings) do
 				table.insert(result.Warnings, ("%s: %s"):format(layerName, message))

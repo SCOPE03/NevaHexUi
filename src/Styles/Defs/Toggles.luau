@@ -85,7 +85,6 @@ Registry.registerComponent({
 		Size = 20,
 		StrokeThickness = 1,
 		Animation = "pop",
-		Group = "default",
 	},
 	Properties = {
 		{ Key = "RowHeight", Type = "number", Default = 26, Min = 16, Max = 120, Group = "Geometry" },
@@ -107,7 +106,6 @@ Registry.registerComponent({
 	Defaults = {
 		RowHeight = 26,
 		Gap = 6,
-		Options = {},
 		Animation = "pop",
 	},
 	Properties = {
