@@ -186,7 +186,7 @@ function Surface.panel(ctx, parent, options)
 	end
 	Helpers.corner(host, frame, radius)
 	if options.Stroke then
-		frame.__nevaStroke = Helpers.stroke(host, frame, options.Stroke, options.StrokeThickness or 1, options.StrokeTransparency or 0)
+		Helpers.attach(frame).Stroke = Helpers.stroke(host, frame, options.Stroke, options.StrokeThickness or 1, options.StrokeTransparency or 0)
 	end
 	return frame
 end

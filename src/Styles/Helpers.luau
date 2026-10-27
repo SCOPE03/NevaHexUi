@@ -9,6 +9,22 @@ local Color = require("NEVA:Utilities/Color")
 
 local Helpers = {}
 
+-- Instances cannot hold custom fields: in Roblox `frame.__nevaStroke = stroke`
+-- raises "__nevaStroke is not a valid member of Frame". Per-instance caches live
+-- here instead, keyed by the instance itself. The keys are weak, so an entry is
+-- collected together with the instance it describes.
+local attachments = setmetatable({}, { __mode = "k" })
+
+function Helpers.attach(instance)
+	assert(instance, "Helpers.attach needs an instance")
+	local record = attachments[instance]
+	if not record then
+		record = {}
+		attachments[instance] = record
+	end
+	return record
+end
+
 function Helpers.new(host, className, props, parent)
 	return host.new(className, props, parent)
 end
@@ -53,9 +69,6 @@ end
 
 function Helpers.padding(host, parent, left, right, top, bottom)
 	assert(parent, "Helpers.padding needs a parent")
-	if parent.__nevaPaddingOwner ~= nil then
-		return parent.__nevaPaddingOwner
-	end
 	local padding = host.new("UIPadding", {
 		PaddingLeft = host.udim(0, left or 0),
 		PaddingRight = host.udim(0, right or left or 0),

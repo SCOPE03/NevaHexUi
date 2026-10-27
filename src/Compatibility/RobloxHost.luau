@@ -104,6 +104,27 @@ function RobloxHost.new(capabilities)
 		end)
 	end
 
+	-- UIGradient.Color and .Transparency need real ColorSequence / NumberSequence
+	-- values. The framework builds them as plain marked tables so both back ends
+	-- share one code path, and they are converted here; assigning the table
+	-- directly would be rejected (and silently dropped) by the engine.
+	local function normaliseValue(value)
+		if type(value) ~= "table" then
+			return value
+		end
+		if value.__nevaColorSequence then
+			return safeCall(function()
+				return ColorSequence.new(value.From, value.To)
+			end) or value
+		end
+		if value.__nevaNumberSequence then
+			return safeCall(function()
+				return NumberSequence.new(value.From or 0, value.To or 0)
+			end) or value
+		end
+		return value
+	end
+
 	host.new = function(className, props, parent)
 		local instance = safeCall(function()
 			return Instance.new(className)
@@ -117,8 +138,9 @@ function RobloxHost.new(capabilities)
 		if props then
 			for key, value in pairs(props) do
 				if key ~= "Parent" and value ~= nil then
+					local resolved = normaliseValue(value)
 					safeCall(function()
-						instance[key] = value
+						instance[key] = resolved
 					end)
 				end
 			end
@@ -129,8 +151,9 @@ function RobloxHost.new(capabilities)
 	host.set = function(instance, props)
 		for key, value in pairs(props) do
 			if key ~= "Parent" and value ~= nil then
+				local resolved = normaliseValue(value)
 				safeCall(function()
-					instance[key] = value
+					instance[key] = resolved
 				end)
 			end
 		end

@@ -23,7 +23,7 @@
     {
       "id": "Compatibility/MockHost",
       "path": "src/Compatibility/MockHost.luau",
-      "bytes": 15576,
+      "bytes": 16032,
       "requires": [
         "Compatibility/PressEvents"
       ]
@@ -31,7 +31,7 @@
     {
       "id": "Compatibility/RobloxHost",
       "path": "src/Compatibility/RobloxHost.luau",
-      "bytes": 11222,
+      "bytes": 12023,
       "requires": [
         "Compatibility/PressEvents"
       ]
@@ -248,7 +248,7 @@
     {
       "id": "Styles/Helpers",
       "path": "src/Styles/Helpers.luau",
-      "bytes": 4950,
+      "bytes": 5439,
       "requires": [
         "Utilities/Color"
       ]
@@ -256,7 +256,7 @@
     {
       "id": "Styles/Surface",
       "path": "src/Styles/Surface.luau",
-      "bytes": 8222,
+      "bytes": 8232,
       "requires": [
         "Animation/Presets",
         "Styles/Helpers",
@@ -280,7 +280,7 @@
     {
       "id": "Core/Window",
       "path": "src/Core/Window.luau",
-      "bytes": 26491,
+      "bytes": 26508,
       "requires": [
         "Configuration/Config",
         "Core/Container",
@@ -335,7 +335,7 @@
     {
       "id": "Styles/Defs/Pickers",
       "path": "src/Styles/Defs/Pickers.luau",
-      "bytes": 15689,
+      "bytes": 15694,
       "requires": [
         "Styles/Helpers",
         "Styles/Registry",
@@ -417,18 +417,18 @@
   "outputs": [
     {
       "file": "build/NEVAHEXUI.luau",
-      "bytes": 414263,
-      "hash": "1b03e1443f4e3f8c"
+      "bytes": 416041,
+      "hash": "f1d19d8e05532a14"
     },
     {
       "file": "build/NEVAHEXUI.min.lua",
-      "bytes": 366042,
-      "hash": "493266e9363784d3"
+      "bytes": 366872,
+      "hash": "2673c4a7820e6405"
     },
     {
       "file": "build/nevahexui-tests.luau",
-      "bytes": 432544,
-      "hash": "11a59ccf44c08697"
+      "bytes": 434322,
+      "hash": "b58d38006ade8735"
     }
   ]
 }

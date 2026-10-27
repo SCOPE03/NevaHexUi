@@ -55,6 +55,13 @@ MockInstance.__newindex = function(self, key, value)
 		end
 		return
 	end
+	-- Real Instances hold no custom fields: `frame.__nevaStroke = stroke` raises
+	-- in Roblox ("__nevaStroke is not a valid member of Frame"). No Roblox
+	-- property name starts with an underscore, so the mock refuses them too --
+	-- that is what makes this mistake visible in the headless runs.
+	if type(key) == "string" and key:sub(1, 1) == "_" then
+		error(("%s is not a valid member of %s"):format(key, tostring(rawget(self, "_props").ClassName)))
+	end
 	local props = rawget(self, "_props")
 	local previous = props[key]
 	props[key] = value

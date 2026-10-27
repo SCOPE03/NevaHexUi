@@ -478,6 +478,13 @@ MockInstance.__newindex = function(self, key, value)
 		end
 		return
 	end
+	-- Real Instances hold no custom fields: `frame.__nevaStroke = stroke` raises
+	-- in Roblox ("__nevaStroke is not a valid member of Frame"). No Roblox
+	-- property name starts with an underscore, so the mock refuses them too --
+	-- that is what makes this mistake visible in the headless runs.
+	if type(key) == "string" and key:sub(1, 1) == "_" then
+		error(("%s is not a valid member of %s"):format(key, tostring(rawget(self, "_props").ClassName)))
+	end
 	local props = rawget(self, "_props")
 	local previous = props[key]
 	props[key] = value
@@ -1156,6 +1163,27 @@ function RobloxHost.new(capabilities)
 		end)
 	end
 
+	-- UIGradient.Color and .Transparency need real ColorSequence / NumberSequence
+	-- values. The framework builds them as plain marked tables so both back ends
+	-- share one code path, and they are converted here; assigning the table
+	-- directly would be rejected (and silently dropped) by the engine.
+	local function normaliseValue(value)
+		if type(value) ~= "table" then
+			return value
+		end
+		if value.__nevaColorSequence then
+			return safeCall(function()
+				return ColorSequence.new(value.From, value.To)
+			end) or value
+		end
+		if value.__nevaNumberSequence then
+			return safeCall(function()
+				return NumberSequence.new(value.From or 0, value.To or 0)
+			end) or value
+		end
+		return value
+	end
+
 	host.new = function(className, props, parent)
 		local instance = safeCall(function()
 			return Instance.new(className)
@@ -1169,8 +1197,9 @@ function RobloxHost.new(capabilities)
 		if props then
 			for key, value in pairs(props) do
 				if key ~= "Parent" and value ~= nil then
+					local resolved = normaliseValue(value)
 					safeCall(function()
-						instance[key] = value
+						instance[key] = resolved
 					end)
 				end
 			end
@@ -1181,8 +1210,9 @@ function RobloxHost.new(capabilities)
 	host.set = function(instance, props)
 		for key, value in pairs(props) do
 			if key ~= "Parent" and value ~= nil then
+				local resolved = normaliseValue(value)
 				safeCall(function()
-					instance[key] = value
+					instance[key] = resolved
 				end)
 			end
 		end
@@ -7709,6 +7739,22 @@ local Color = __NEVA_Utilities_Color
 
 local Helpers = {}
 
+-- Instances cannot hold custom fields: in Roblox `frame.__nevaStroke = stroke`
+-- raises "__nevaStroke is not a valid member of Frame". Per-instance caches live
+-- here instead, keyed by the instance itself. The keys are weak, so an entry is
+-- collected together with the instance it describes.
+local attachments = setmetatable({}, { __mode = "k" })
+
+function Helpers.attach(instance)
+	assert(instance, "Helpers.attach needs an instance")
+	local record = attachments[instance]
+	if not record then
+		record = {}
+		attachments[instance] = record
+	end
+	return record
+end
+
 function Helpers.new(host, className, props, parent)
 	return host.new(className, props, parent)
 end
@@ -7753,9 +7799,6 @@ end
 
 function Helpers.padding(host, parent, left, right, top, bottom)
 	assert(parent, "Helpers.padding needs a parent")
-	if parent.__nevaPaddingOwner ~= nil then
-		return parent.__nevaPaddingOwner
-	end
 	local padding = host.new("UIPadding", {
 		PaddingLeft = host.udim(0, left or 0),
 		PaddingRight = host.udim(0, right or left or 0),
@@ -8066,7 +8109,7 @@ function Surface.panel(ctx, parent, options)
 	end
 	Helpers.corner(host, frame, radius)
 	if options.Stroke then
-		frame.__nevaStroke = Helpers.stroke(host, frame, options.Stroke, options.StrokeThickness or 1, options.StrokeTransparency or 0)
+		Helpers.attach(frame).Stroke = Helpers.stroke(host, frame, options.Stroke, options.StrokeThickness or 1, options.StrokeTransparency or 0)
 	end
 	return frame
 end
@@ -9467,11 +9510,12 @@ function Window:HighlightActiveTab()
 			local active = tab == self.ActiveTab
 			tab.Button.BackgroundTransparency = active and 0.05 or 0.5
 			tab.Button.TextColor3 = active and tokens.Text or tokens.TextMuted
-			local stroke = tab.Button.__nevaStroke
-			if active and not stroke then
-				tab.Button.__nevaStroke = Helpers.stroke(self.Host, tab.Button, tokens.Accent, 1, 0.15)
-			elseif stroke then
-				stroke.Transparency = active and 0.15 or 1
+			local record = Helpers.attach(tab.Button)
+			if active and not record.Stroke then
+				record.Stroke = Helpers.stroke(self.Host, tab.Button, tokens.Accent, 1, 0.15)
+			end
+			if record.Stroke then
+				record.Stroke.Transparency = active and 0.15 or 1
 			end
 		end
 	end
@@ -11906,11 +11950,10 @@ styles[#styles + 1] = {
 		view.Apply = function(self, state)
 			for _, entry in ipairs(self.Chips) do
 				local selected = type(state.Value) == "table" and Color.equals(entry.Colour, state.Value)
-				local stroke = entry.Instance.__nevaStroke
-					or Helpers.stroke(host, entry.Instance, ctx.Tokens.Outline, 2, 0)
-				entry.Instance.__nevaStroke = stroke
-				stroke.Color = selected and ctx.Tokens.Text or ctx.Tokens.Outline
-				stroke.Transparency = selected and 0 or 0.5
+				local record = Helpers.attach(entry.Instance)
+				record.Stroke = record.Stroke or Helpers.stroke(host, entry.Instance, ctx.Tokens.Outline, 2, 0)
+				record.Stroke.Color = selected and ctx.Tokens.Text or ctx.Tokens.Outline
+				record.Stroke.Transparency = selected and 0 or 0.5
 			end
 		end
 		return view

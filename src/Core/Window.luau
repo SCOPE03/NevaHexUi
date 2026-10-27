@@ -425,11 +425,12 @@ function Window:HighlightActiveTab()
 			local active = tab == self.ActiveTab
 			tab.Button.BackgroundTransparency = active and 0.05 or 0.5
 			tab.Button.TextColor3 = active and tokens.Text or tokens.TextMuted
-			local stroke = tab.Button.__nevaStroke
-			if active and not stroke then
-				tab.Button.__nevaStroke = Helpers.stroke(self.Host, tab.Button, tokens.Accent, 1, 0.15)
-			elseif stroke then
-				stroke.Transparency = active and 0.15 or 1
+			local record = Helpers.attach(tab.Button)
+			if active and not record.Stroke then
+				record.Stroke = Helpers.stroke(self.Host, tab.Button, tokens.Accent, 1, 0.15)
+			end
+			if record.Stroke then
+				record.Stroke.Transparency = active and 0.15 or 1
 			end
 		end
 	end

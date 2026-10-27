@@ -422,6 +422,10 @@ MockInstance._emit(previous, "ChildRemoved", self)
 end
 return
 end
+
+if type(key) == "string" and key:sub(1, 1) == "_" then
+error(("%s is not a valid member of %s"):format(key, tostring(rawget(self, "_props").ClassName)))
+end
 local props = rawget(self, "_props")
 local previous = props[key]
 props[key] = value
@@ -1084,6 +1088,23 @@ return Enum[enumName][itemName]
 end)
 end
 
+local function normaliseValue(value)
+if type(value) ~= "table" then
+return value
+end
+if value.__nevaColorSequence then
+return safeCall(function()
+return ColorSequence.new(value.From, value.To)
+end) or value
+end
+if value.__nevaNumberSequence then
+return safeCall(function()
+return NumberSequence.new(value.From or 0, value.To or 0)
+end) or value
+end
+return value
+end
+
 host.new = function(className, props, parent)
 local instance = safeCall(function()
 return Instance.new(className)
@@ -1097,8 +1118,9 @@ end
 if props then
 for key, value in pairs(props) do
 if key ~= "Parent" and value ~= nil then
+local resolved = normaliseValue(value)
 safeCall(function()
-instance[key] = value
+instance[key] = resolved
 end)
 end
 end
@@ -1109,8 +1131,9 @@ end
 host.set = function(instance, props)
 for key, value in pairs(props) do
 if key ~= "Parent" and value ~= nil then
+local resolved = normaliseValue(value)
 safeCall(function()
-instance[key] = value
+instance[key] = resolved
 end)
 end
 end
@@ -7364,6 +7387,18 @@ local Color = __NEVA_Utilities_Color
 
 local Helpers = {}
 
+local attachments = setmetatable({}, { __mode = "k" })
+
+function Helpers.attach(instance)
+assert(instance, "Helpers.attach needs an instance")
+local record = attachments[instance]
+if not record then
+record = {}
+attachments[instance] = record
+end
+return record
+end
+
 function Helpers.new(host, className, props, parent)
 return host.new(className, props, parent)
 end
@@ -7408,9 +7443,6 @@ end
 
 function Helpers.padding(host, parent, left, right, top, bottom)
 assert(parent, "Helpers.padding needs a parent")
-if parent.__nevaPaddingOwner ~= nil then
-return parent.__nevaPaddingOwner
-end
 local padding = host.new("UIPadding", {
 PaddingLeft = host.udim(0, left or 0),
 PaddingRight = host.udim(0, right or left or 0),
@@ -7708,7 +7740,7 @@ radius = ctx.Tokens.CornerRadius
 end
 Helpers.corner(host, frame, radius)
 if options.Stroke then
-frame.__nevaStroke = Helpers.stroke(host, frame, options.Stroke, options.StrokeThickness or 1, options.StrokeTransparency or 0)
+Helpers.attach(frame).Stroke = Helpers.stroke(host, frame, options.Stroke, options.StrokeThickness or 1, options.StrokeTransparency or 0)
 end
 return frame
 end
@@ -9057,11 +9089,12 @@ if tab.Button then
 local active = tab == self.ActiveTab
 tab.Button.BackgroundTransparency = active and 0.05 or 0.5
 tab.Button.TextColor3 = active and tokens.Text or tokens.TextMuted
-local stroke = tab.Button.__nevaStroke
-if active and not stroke then
-tab.Button.__nevaStroke = Helpers.stroke(self.Host, tab.Button, tokens.Accent, 1, 0.15)
-elseif stroke then
-stroke.Transparency = active and 0.15 or 1
+local record = Helpers.attach(tab.Button)
+if active and not record.Stroke then
+record.Stroke = Helpers.stroke(self.Host, tab.Button, tokens.Accent, 1, 0.15)
+end
+if record.Stroke then
+record.Stroke.Transparency = active and 0.15 or 1
 end
 end
 end
@@ -11436,11 +11469,10 @@ local view = { Root = slot.Root, Chips = chips, Selected = {} }
 view.Apply = function(self, state)
 for _, entry in ipairs(self.Chips) do
 local selected = type(state.Value) == "table" and Color.equals(entry.Colour, state.Value)
-local stroke = entry.Instance.__nevaStroke
-or Helpers.stroke(host, entry.Instance, ctx.Tokens.Outline, 2, 0)
-entry.Instance.__nevaStroke = stroke
-stroke.Color = selected and ctx.Tokens.Text or ctx.Tokens.Outline
-stroke.Transparency = selected and 0 or 0.5
+local record = Helpers.attach(entry.Instance)
+record.Stroke = record.Stroke or Helpers.stroke(host, entry.Instance, ctx.Tokens.Outline, 2, 0)
+record.Stroke.Color = selected and ctx.Tokens.Text or ctx.Tokens.Outline
+record.Stroke.Transparency = selected and 0 or 0.5
 end
 end
 return view
