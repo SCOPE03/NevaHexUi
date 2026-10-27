@@ -1022,11 +1022,18 @@ function MockHost.new(options)
 		return fired
 	end
 
-	host.newRoot = function(props)
-		local gui = host.new("ScreenGui", props or {}, nil)
-		host.Root = gui
-		return gui
+host.newRoot = function(props)
+	-- Mirrors the Roblox path closely enough to be checked: the ScreenGui gets a
+	-- container, so a window that never received one is visible in the tests as
+	-- an unparented root.
+	if not host.CoreGui then
+		host.CoreGui = host.new("CoreGui", { Name = "CoreGui" }, nil)
 	end
+	local gui = host.new("ScreenGui", props or {}, host.CoreGui)
+	host.Root = gui
+	host.ParentSource = "CoreGui"
+	return gui
+end
 
 	host.children = function(instance)
 		return instance:GetChildren()
@@ -1496,51 +1503,90 @@ function RobloxHost.new(capabilities)
 		error("NEVAHEXUI: emit is only available on the mock back end; drive real input instead")
 	end
 
-	host.newRoot = function(props)
-		local parent
-		local source = "none"
-		local gethuiFn = globalFunction("gethui")
-		if gethuiFn then
-			local candidate = safeCall(gethuiFn)
-			if candidate then
-				parent, source = candidate, "gethui"
-			end
-		end
-		if not parent then
-			parent = service("CoreGui")
-			source = "CoreGui"
-		end
-		if not parent then
-			local player = players and safeCall(function()
-				return players.LocalPlayer
-			end)
-			if player then
-				parent = safeCall(function()
+host.newRoot = function(props)
+	-- Container resolution, in the order executors expect. A candidate's name is
+	-- only claimed once it really produced a container, so ParentSource never
+	-- reports somewhere the GUI did not go.
+	local candidates = {
+		{
+			Name = "gethui",
+			Get = function()
+				local fn = globalFunction("gethui")
+				if not fn then
+					return nil
+				end
+				return safeCall(fn)
+			end,
+		},
+		{
+			Name = "CoreGui",
+			Get = function()
+				return service("CoreGui")
+			end,
+		},
+		{
+			Name = "PlayerGui",
+			Get = function()
+				local player = players and safeCall(function()
+					return players.LocalPlayer
+				end)
+				if not player then
+					return nil
+				end
+				return safeCall(function()
 					return player:WaitForChild("PlayerGui", 5)
 				end)
-				source = "PlayerGui"
-			end
+			end,
+		},
+	}
+
+	local parent, source = nil, "none"
+	for _, candidate in ipairs(candidates) do
+		local container = candidate.Get()
+		if container ~= nil then
+			parent, source = container, candidate.Name
+			break
 		end
-		local gui = host.new("ScreenGui", props or {}, parent)
-		host.Root = gui
-		host.ParentSource = source
-		if capabilities and capabilities.protectGui then
-			local synTable = safeCall(function()
-				return syn
-			end)
-			if synTable and type(synTable.protect_gui) == "function" then
-				safeCall(function()
-					synTable.protect_gui(gui)
-				end)
-			else
-				local protect = globalFunction("protect_gui")
-				if protect then
-					safeCall(protect, gui)
-				end
-			end
-		end
-		return gui
 	end
+
+	local gui = host.new("ScreenGui", props or {}, nil)
+	-- A protected container refuses the assignment. That must not take the whole
+	-- interface down, and it must not be reported as a success either.
+	if parent then
+		local attached = safeCall(function()
+			gui.Parent = parent
+			return true
+		end)
+		if attached ~= true then
+			parent, source = nil, "none"
+		end
+	end
+	host.Root = gui
+	host.ParentSource = source
+	if source == "none" then
+		safeCall(function()
+			if type(warn) == "function" then
+				warn("NEVAHEXUI: no GUI container available (gethui, CoreGui, PlayerGui); the interface was created but will not be visible")
+			end
+		end)
+	end
+	if capabilities and capabilities.protectGui then
+		local synTable = safeCall(function()
+			return syn
+		end)
+		if synTable and type(synTable.protect_gui) == "function" then
+			safeCall(function()
+				synTable.protect_gui(gui)
+			end)
+		else
+			local protect = globalFunction("protect_gui")
+			if protect then
+				safeCall(protect, gui)
+			end
+		end
+	end
+	return gui
+end
 
 	host.children = function(instance)
 		return safeCall(function()
@@ -9339,7 +9385,23 @@ function Window:BuildChrome()
 		self.Root = nil
 	end
 
-	local parent = self.Options.Parent or host.Root
+local parent = self.Options.Parent or host.Root
+	if not parent and host.newRoot then
+		-- A window tree hanging off nothing is built and then never shown, so the
+		-- ScreenGui root is created on demand. Where it landed is recorded on the
+		-- window (Window.GuiParent) and on the host (Host.ParentSource).
+		parent = host.newRoot({
+			Name = "NEVAHEXUI",
+			ResetOnSpawn = false,
+			IgnoreGuiInset = true,
+			DisplayOrder = 999,
+			ZIndexBehavior = host.enumItem("ZIndexBehavior", "Sibling"),
+		})
+	end
+	self.GuiParent = host.ParentSource or "unknown"
+	if not parent then
+		self.Context:Diagnostic("Error", "NEVAHEXUI: no GUI container was available (tried gethui(), CoreGui and PlayerGui), so the interface was built but cannot be displayed")
+	end
 	self.Root = host.new("Frame", {
 		Name = "NEVAHEXUI_" .. self.Name,
 		BackgroundColor3 = tokens.Background,

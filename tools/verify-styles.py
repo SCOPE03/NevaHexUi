@@ -92,6 +92,13 @@ host.emit(window.TitleBar, "MouseButton1Up", input)
 local released = window.Dragging == false
 print(("TITLEBAR=%s/%s"):format(tostring(pressed), tostring(released)))
 
+-- 5. The window tree must hang off a parented ScreenGui, otherwise the whole
+--    interface is built and never shown.
+local rootGui = window.Host.Root
+print("GUIPARENT=" .. tostring(window.GuiParent or window.Host.ParentSource or "unknown"))
+print("ROOTCHAIN=" .. tostring(
+	rootGui ~= nil and rootGui.Parent ~= nil and window.Root ~= nil and window.Root.Parent == rootGui))
+
 local picker = section:CreateColorPicker({ Name = "Sweep colour", Flag = "SweepColour" })
 local preview = picker.View and picker.View.Input
 local before = picker.View and picker.View.Open
@@ -137,7 +144,7 @@ def main(argv):
         value = count(name)
         if value != 0:
             problems.append("%s=%d" % (name, value))
-    for name in ("TITLEBAR=true/true", "PICKER=true", "COPYCLASS=TextButton"):
+    for name in ("TITLEBAR=true/true", "PICKER=true", "COPYCLASS=TextButton", "ROOTCHAIN=true"):
         if name not in output:
             problems.append("expected " + name)
 

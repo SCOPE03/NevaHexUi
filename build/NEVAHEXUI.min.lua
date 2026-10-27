@@ -820,8 +820,13 @@ return fired
 end
 
 host.newRoot = function(props)
-local gui = host.new("ScreenGui", props or {}, nil)
+
+if not host.CoreGui then
+host.CoreGui = host.new("CoreGui", { Name = "CoreGui" }, nil)
+end
+local gui = host.new("ScreenGui", props or {}, host.CoreGui)
 host.Root = gui
+host.ParentSource = "CoreGui"
 return gui
 end
 
@@ -1277,33 +1282,69 @@ error("NEVAHEXUI: emit is only available on the mock back end; drive real input 
 end
 
 host.newRoot = function(props)
-local parent
-local source = "none"
-local gethuiFn = globalFunction("gethui")
-if gethuiFn then
-local candidate = safeCall(gethuiFn)
-if candidate then
-parent, source = candidate, "gethui"
+
+local candidates = {
+{
+Name = "gethui",
+Get = function()
+local fn = globalFunction("gethui")
+if not fn then
+return nil
 end
-end
-if not parent then
-parent = service("CoreGui")
-source = "CoreGui"
-end
-if not parent then
+return safeCall(fn)
+end,
+},
+{
+Name = "CoreGui",
+Get = function()
+return service("CoreGui")
+end,
+},
+{
+Name = "PlayerGui",
+Get = function()
 local player = players and safeCall(function()
 return players.LocalPlayer
 end)
-if player then
-parent = safeCall(function()
+if not player then
+return nil
+end
+return safeCall(function()
 return player:WaitForChild("PlayerGui", 5)
 end)
-source = "PlayerGui"
+end,
+},
+}
+
+local parent, source = nil, "none"
+for _, candidate in ipairs(candidates) do
+local container = candidate.Get()
+if container ~= nil then
+parent, source = container, candidate.Name
+break
 end
 end
-local gui = host.new("ScreenGui", props or {}, parent)
+
+local gui = host.new("ScreenGui", props or {}, nil)
+
+if parent then
+local attached = safeCall(function()
+gui.Parent = parent
+return true
+end)
+if attached ~= true then
+parent, source = nil, "none"
+end
+end
 host.Root = gui
 host.ParentSource = source
+if source == "none" then
+safeCall(function()
+if type(warn) == "function" then
+warn("NEVAHEXUI: no GUI container available (gethui, CoreGui, PlayerGui); the interface was created but will not be visible")
+end
+end)
+end
 if capabilities and capabilities.protectGui then
 local synTable = safeCall(function()
 return syn
@@ -8789,6 +8830,20 @@ self.Root = nil
 end
 
 local parent = self.Options.Parent or host.Root
+if not parent and host.newRoot then
+
+parent = host.newRoot({
+Name = "NEVAHEXUI",
+ResetOnSpawn = false,
+IgnoreGuiInset = true,
+DisplayOrder = 999,
+ZIndexBehavior = host.enumItem("ZIndexBehavior", "Sibling"),
+})
+end
+self.GuiParent = host.ParentSource or "unknown"
+if not parent then
+self.Context:Diagnostic("Error", "NEVAHEXUI: no GUI container was available (tried gethui(), CoreGui and PlayerGui), so the interface was built but cannot be displayed")
+end
 self.Root = host.new("Frame", {
 Name = "NEVAHEXUI_" .. self.Name,
 BackgroundColor3 = tokens.Background,

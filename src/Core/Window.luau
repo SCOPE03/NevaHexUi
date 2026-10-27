@@ -116,7 +116,23 @@ function Window:BuildChrome()
 		self.Root = nil
 	end
 
-	local parent = self.Options.Parent or host.Root
+local parent = self.Options.Parent or host.Root
+	if not parent and host.newRoot then
+		-- A window tree hanging off nothing is built and then never shown, so the
+		-- ScreenGui root is created on demand. Where it landed is recorded on the
+		-- window (Window.GuiParent) and on the host (Host.ParentSource).
+		parent = host.newRoot({
+			Name = "NEVAHEXUI",
+			ResetOnSpawn = false,
+			IgnoreGuiInset = true,
+			DisplayOrder = 999,
+			ZIndexBehavior = host.enumItem("ZIndexBehavior", "Sibling"),
+		})
+	end
+	self.GuiParent = host.ParentSource or "unknown"
+	if not parent then
+		self.Context:Diagnostic("Error", "NEVAHEXUI: no GUI container was available (tried gethui(), CoreGui and PlayerGui), so the interface was built but cannot be displayed")
+	end
 	self.Root = host.new("Frame", {
 		Name = "NEVAHEXUI_" .. self.Name,
 		BackgroundColor3 = tokens.Background,

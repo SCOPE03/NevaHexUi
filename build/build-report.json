@@ -23,7 +23,7 @@
     {
       "id": "Compatibility/MockHost",
       "path": "src/Compatibility/MockHost.luau",
-      "bytes": 16032,
+      "bytes": 16343,
       "requires": [
         "Compatibility/PressEvents"
       ]
@@ -31,7 +31,7 @@
     {
       "id": "Compatibility/RobloxHost",
       "path": "src/Compatibility/RobloxHost.luau",
-      "bytes": 12023,
+      "bytes": 12968,
       "requires": [
         "Compatibility/PressEvents"
       ]
@@ -280,7 +280,7 @@
     {
       "id": "Core/Window",
       "path": "src/Core/Window.luau",
-      "bytes": 26508,
+      "bytes": 27209,
       "requires": [
         "Configuration/Config",
         "Core/Container",
@@ -417,18 +417,18 @@
   "outputs": [
     {
       "file": "build/NEVAHEXUI.luau",
-      "bytes": 416041,
-      "hash": "f1d19d8e05532a14"
+      "bytes": 417998,
+      "hash": "59c07db209fd7a77"
     },
     {
       "file": "build/NEVAHEXUI.min.lua",
-      "bytes": 366872,
-      "hash": "2673c4a7820e6405"
+      "bytes": 367996,
+      "hash": "15b8e8407d6ab1b7"
     },
     {
       "file": "build/nevahexui-tests.luau",
-      "bytes": 434322,
-      "hash": "b58d38006ade8735"
+      "bytes": 436279,
+      "hash": "acb7c7e6af01ca2a"
     }
   ]
 }

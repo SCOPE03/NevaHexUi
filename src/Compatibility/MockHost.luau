@@ -461,11 +461,18 @@ function MockHost.new(options)
 		return fired
 	end
 
-	host.newRoot = function(props)
-		local gui = host.new("ScreenGui", props or {}, nil)
-		host.Root = gui
-		return gui
+host.newRoot = function(props)
+	-- Mirrors the Roblox path closely enough to be checked: the ScreenGui gets a
+	-- container, so a window that never received one is visible in the tests as
+	-- an unparented root.
+	if not host.CoreGui then
+		host.CoreGui = host.new("CoreGui", { Name = "CoreGui" }, nil)
 	end
+	local gui = host.new("ScreenGui", props or {}, host.CoreGui)
+	host.Root = gui
+	host.ParentSource = "CoreGui"
+	return gui
+end
 
 	host.children = function(instance)
 		return instance:GetChildren()
